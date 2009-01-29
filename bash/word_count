@@ -1,0 +1,8 @@
+#!/bin/bash
+output=raw.txt
+rm -f $output
+for file in `ls chapter-*.tex`
+do
+    untex -e $file >> $output
+done
+echo -e "Word count: \n wc\t$(cat $output | wc -w ) \n awk\t$(./count.awk $output)";

@@ -1,0 +1,100 @@
+#!/bin/bash
+#
+# Die roll testing script.
+#
+# Roll a die for a number of times and check the distribution 
+# that comes out.
+#
+# Potential issues:
+#   Can take quite a long time to finish.
+# Parameters:
+#   1. Number of sides, or six, if not specified,
+#   2. Number of tests, or 100, if not specified.
+# Author:
+#   Konrad Siek 
+
+# Human readable division function.
+# Takes two arguments and returns a pretty fraction.
+function divide {
+    d=`expr $1 / $2`
+    m=`expr $1 % $2`   
+    if [ $m != 0 ]
+    then
+        echo "$d + ( $m / $2 )"
+    else
+        echo "$d"
+    fi 
+}
+
+# Establish number of sides for the die.
+if [ "$1" == '' ]
+then
+    sides=6
+else
+    sides=$1
+fi
+
+# Establish number of tosses.
+if [ "$2" == '' ]
+then
+    rolls=100
+else 
+    rolls=$2
+fi
+
+# Command to use for testing.
+command='./d' 
+
+# Maybe it's a global command, you never know.
+$command > /dev/null
+if [ $? != '0' ] 
+then
+    command='d'
+fi
+
+# Roll the die, and check results.
+$command > /dev/null
+if [ $? != '0' ] 
+then
+    # Exit if the command is not found.
+    echo "Could not run commnd 'd' or './d'. Exiting..."
+    exit 1
+fi
+
+# Instantiate the result array.
+for i in $(seq 1 $sides)
+do
+    control[$i]=0;
+done
+
+# Evaluate the results. 
+sum='0';
+count='0';
+
+# Evaluate expected value in each 'class'.
+expected=`divide $(expr $sides + 1) 2`
+
+# Roll the die, count the results, and display it at each step.
+for i in $(seq 1 $rolls) 
+do
+    component=`$command $sides`
+    sum=`expr $sum + $component`
+    count=`expr $count + 1`
+    control[$component]=`expr ${control[$component]} + 1`
+    echo -e "$i\t$component\t$sum\t$(divide $sum $count)"
+done
+
+# Evaluate the global.
+value=`divide $sum $count`
+
+# Display results.
+echo
+echo -e "expected value:\t$expected"
+echo -e "actual value:\t$value" 
+echo -en "rolled:\t"
+
+for i in $(seq 1 $sides)
+do
+    echo -en "$i: ${control[$i]}\t";
+done
+echo

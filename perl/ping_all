@@ -1,0 +1,81 @@
+#!/usr/bin/perl 
+#
+# Ping all
+#
+# Pings all ip addresses within the specified range and
+# retrieves the name
+#
+# Parameters:
+#   range start - IP address at which to check,
+#   range end - last IP address to check.
+# Example:
+#   pingall 10.0.0.10 10.0.0.20 
+#   Checks all the addresses between .10 and .20
+# Author:
+#   Konrad Siek
+
+use Socket;
+
+# Quit, if no range is specified.
+# Note: Number of parameters in Perl is one lower.
+die "Usage: $0 <range start> <range end>\n" if ($#ARGV != 1);
+
+# Validate IP and return its more manageable form.
+sub to_ip {
+    my $message = "$_[0] is not a valid IP.";
+    my @array = split(/\./, $_[0]);
+    die $message if $#array != 3;
+    foreach $e (@array) {
+        die $message if $e =~ m/[^0-9]+/ or $e > 255;
+    }
+    return @array;
+}
+
+# Check the validity of range IPs and turn them into arrays.
+my @start_range = to_ip(@ARGV[0]);
+my @end_range = to_ip(@ARGV[1]);
+
+# Increment the IP to the next. Roll over if overflow occurs.
+sub increment {
+    @array = @_;
+    for($i = 3; $i >= 0;) {
+        if(@array[$i] >= 255) { 
+            $i--;
+        } else {
+            @array[$i]++;
+            return @array;
+        }
+    }    
+    return (0, 0, 0, 0);
+}
+
+# Compare two IP arrays.
+sub compare {
+    @a = @_[0..3];
+    @b = @_[4..7];
+    for($i = 0; $i < 4; $i ++) {
+        if(@a[$i] < @b[$i]){
+            return -1;
+        }
+        if(@a[$i] > @b[$i]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+# Prepare list of addresses within range.
+@addresses = ();
+while (compare(@start_range, @end_range) <= 0) {
+    @addresses[++$#addresses] = join('.', @start_range);
+    @start_range = increment(@start_range);
+}
+
+# Ping each of the addresses from the prepared list.
+foreach $address (@addresses) {
+    my $return = `ping -c 5 $address > /dev/null && echo 1`;
+    my $state = $return == 1 ? '+' : '-';
+    my $inet_addr = inet_aton($address);
+    my $hostname = gethostbyaddr($inet_addr, AF_INET);
+    print "[$state]\t$address\t$hostname\n";
+}

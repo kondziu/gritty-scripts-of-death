@@ -1,0 +1,235 @@
+#!/bin/bash
+#
+# AVI to ISO/DVD 
+#
+# Convert a AVI movie into a burn-ready ISO image, or even burn straight onto 
+# DVD
+#
+# Potential issues:
+#   This script will overwrite existing files,
+#   It uses a lot of disk space.
+# Parameters:
+#   -a | --ac3-present - assume sound is already ac3 and skip 
+#               audio conversion (otherwise convert audio too)
+#   -b | --burn-dvd - output the converted data directly to dvd 
+#               (default device: /dev/dvdrw); optionally enter 
+#               device name (no spaces after the short switch)
+#               (if this is not set simply generate an ISO image)
+#   -c | --chapter-list - a string describing how the dvd should 
+#               be divided into chapters (default: "0", 
+#               example: "0,1:12,2:31,3:45,4:55,6:25,7:09,9:07,9:26")           
+#   -d | --output-dir - a place to land generated files
+#               (default: directory of the converted file)
+#   --skip-encoding - skips encoding, if there is already an mpg file - 
+#               used in testing.
+#   --skip-cleanup - skips cleaning up: do not delete generated files - 
+#               used in testing.
+#   at least one path to an avi file to convert
+# Examples:
+#   (These two examples have different outcomes!)
+#   avi_to_iso elephants_dream.avi              
+#   avi_to_iso -a -b/dev/dvdrw -c "0,1:12,2:31,3:45,4:55,6:25,7:09,9:07,9:26"\
+#               elephants_dream.avi
+# Requires: 
+#   mencoder    (http://www.mplayerhq.hu/)
+#   dvdauthor   (http://dvdauthor.sourceforge.net/)
+#   genisoimage and/or growisofs
+# Author:
+#   Konrad Siek
+
+#REGEX: "[0-9]{1,2}(,[0-9]{1,2}(:[0-9]{1,2}(:[0-9]{1,2})?)?)*"
+
+# Set default options
+ac3_sound="false"
+burn_dvd="false"
+dvd_device="/dev/dvdrw"
+chapter_list="0"
+output_directory=""
+skip_encoding="false"
+skip_cleanup="false"
+
+# Converts a file into a DVD format
+# @param $1: path
+function convert_file {
+    # Strip extension from file
+    name=`basename $1 .avi`
+    basename=`basename $1`
+
+    # Establish destination for converted file
+    if [ "$output_directory" == "" ]
+    then
+        destination=`dirname $1`
+    else
+        destination=$output_directory
+    fi
+
+    echo "Convert file:"
+    echo -e "\t$1"
+    echo "into:"
+    echo -e "\t$destination/$name.mpg"
+
+    # Encode video and, perhaps, audio, into mpeg2
+    # Ugh, crappy indentation...
+    if [ $skip_encoding = 'false' ] 
+    then
+        if [ $ac3_sound = 'true' ]
+        then 
+            mencoder \
+                -oac copy -ovc lavc -of mpeg \
+                -mpegopts format=dvd -vf scale=720:576,harddup \
+                -lavcopts \
+                    vcodec=mpeg2video:\
+vrc_buf_size=1835:\
+vrc_maxrate=9800:\
+vbitrate=5000:\
+keyint=15:\
+aspect=16/9 \
+                -ofps 25 -o $destination/$name.mpg $1
+        else
+            mencoder \
+                -oac lavc -ovc lavc -of mpeg \
+                -mpegopts format=dvd -vf scale=720:576,harddup \
+                -srate 48000 -af lavcresample=48000 \
+                -lavcopts \
+                vcodec=mpeg2video:\             
+vrc_buf_size=1835:\
+vrc_maxrate=9800:\
+vbitrate=5000:\
+keyint=15:\
+aspect=16/9:\
+acodec=ac3:\
+abitrate=192 \
+                -ofps 25 -o $destination/$name.mpg $1 
+        fi
+
+        # Exit if anything went wrong
+        if [ $? != 0 ]
+        then
+            exit 1
+        fi            
+    fi
+
+    # Create a v. simple configuration XML file for dvdauthor
+    echo -e \
+    `echo "<dvdauthor>\n"
+     echo "\t<vmgm />\n"
+     echo "\t<titleset>\n"
+     echo "\t\t<titles>\n"
+     echo "\t\t\t<pgc>\n"
+     echo "\t\t\t<vob file=\"$destination/$name.mpg\" "
+     echo "chapters=\"$chapter_list\" />\n"
+     echo "\t\t\t</pgc>\n"
+     echo "\t\t</titles>\n"
+     echo "\t</titleset>\n"
+     echo "</dvdauthor>\n"` \
+    > $destination/$name.xml
+
+    # Create dvd structure
+    dvdauthor -o $destination/$name -x $destination/$name.xml
+
+    # Exit if anything went wrong
+    if [ $? != 0 ]
+    then
+        exit 1
+    fi
+    
+    # Create output
+    if [ $burn_dvd == "true" ] 
+    then
+        # Burn DVD
+        growisofs -dvd-compat -Z $dvd_device -dvd-video $destination/$name/
+    else
+        # Generate ISO image
+        genisoimage -dvd-video -o $destination/$name.iso $destination/$name/ 
+    fi
+
+    if [ "$skip_cleanup" == "false" ]
+    then
+        # Clean up
+        rm $name.mpg
+        rm $name.xml
+        rm -r $name/
+    fi
+}
+
+# Main
+# Use getopt to parse command arguments.
+options=`getopt    -o ab::c:d: \
+    --long ac3-present,burn-dvd::,chapter-list:,output-dir:,skip-encoding,skip-cleanup \
+    -n $0 -- "$@"`
+
+# Proceed if everything is OK.
+if [ $? == 0 ] 
+then
+    # Set the parsed command options.
+    eval set -- "$options"
+
+    # Setup selected options
+    while true ; do
+        case "$1" in
+            -a|--ac3-present) 
+                # Assume AC3 sound in input file
+                ac3_sound="true"
+                shift 
+            ;;
+            -c|--chapter-list) 
+                # Set a chapter list
+                chapter_list=$2
+                shift 2 
+            ;;
+            -b|--burn-dvd)
+                # Burn DVD after convertion
+                burn_dvd="true"
+
+                # Optionally set DVD device
+                if [ $2 != "" ] 
+                then
+                    dvd_device=$2
+                fi
+                shift 2
+            ;;
+            -d|--output-dir)
+                # Set output directory
+                output_directory=$2
+                shift 2
+            ;;
+            --skip-encoding)
+                # Set skip encoding
+                skip_encoding="true"
+                shift
+            ;;
+            --skip-cleanup)
+                # Set skip cleanup
+                skip_cleanup="true"
+                shift
+            ;;
+            --) 
+                # Stop parsing options, continuie with the arguments
+                shift
+                break
+            ;;
+            *) 
+                # Weird error
+                echo "Something went horribly, horribly wrong in the interior."
+                exit 1 
+            ;;
+            esac
+    done
+
+    # Print settings
+    echo "Option summary:"
+    echo -e "\tac3_sound=$ac3_sound"
+    echo -e "\tburn_dvd=$burn_dvd"
+    echo -e "\tdvd_device=$dvd_device"
+    echo -e "\tchapter_list=$chapter_list"
+    echo -e "\toutput_directory=$output_directory"
+    echo -e "\tskip_encoding=$skip_encoding"
+
+    # Start converting...
+    for arg 
+    do 
+        convert_file $arg
+    done
+else
+    exit 1
+fi

@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Zero in front
+# Renames all files which start with digits, 
+# padding them with 0s, to get the length of the numbers equal,
+#
+# Potential issues:
+#   This script will overwrite existing files
+# Parameters:
+#   a list of directories subject to conversion, or
+#   no parameters to convert files in current directory.
+# Requires:
+#   nothing
+# Author:
+#   Konrad Siek 
+
+# Scans directory.
+# @param $1: directory
+function scan_directory {
+    # See how long is the largest number
+    top_rank=`expr $(ls $1 | sort -nr | head -n1) : "^[0-9]*"`
+    
+    # If there's anything to do at all...
+    if [ $top_rank -gt 0 ]
+    then
+        # Cycle through the files in the directory...
+        for file in `ls $1`
+        do
+            # Check the length of the current number
+            # This is what takes so much time, it seems...
+            this_rank=`expr $file : "^[0-9]*"`;
+
+            # Act only if there is a number in front
+            if [ $top_rank -gt $this_rank ]
+            then
+                # Create a padding prefix - pad with 0s
+                padding=""
+                for i in $(seq 0 $(expr $top_rank - $this_rank - 1))
+                do
+                    padding=$padding"0"
+                done                
+
+                # Actually move the files
+                mv $1/$file $1/$padding$file
+            fi
+        done
+    fi
+}
+
+# Main
+if [ $# -gt 0 ]
+then
+    # If directories specified, scan each of them separatelly
+    for directory in $@
+    do
+        scan_directory $directory
+    done    
+else
+    # If no arguments, then use this directory
+    scan_directory `pwd`
+fi

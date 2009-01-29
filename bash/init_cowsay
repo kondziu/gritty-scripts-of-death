@@ -1,0 +1,136 @@
+#!/bin/bash
+#
+# Init cowsay
+# Enters cowsay into your local .bashrc file, so that you see 
+# a dead cow every time you use the temrinal. 
+# Yes, the very thing you need!
+# It is actually possible to use this with other commands and files.
+#
+# Potential issues:
+#   Potential serious damage to your ~/.bashrc file is possible!
+#   Best to keep backup of the file!
+# Parameters:
+#   -r|--remove     Remove line instead of adding
+#   -f|--force      Force insert even if line already exists
+#   -h|--help       Print usage and quit
+#   -b|--backup     Backup bashrc file
+#   -c|--command    Use a custom command instead of cowsay
+# Requires:
+#   cowsay (http://www.nog.net/~tony/warez/cowsay.shtml)
+# Author:
+#   Konrad Siek 
+
+# Initiate arguments
+insert='true'
+force='false'
+backup='false'
+command='cowsay -e xx -T \ U -f small.cow $USER@$HOSTNAME'
+bashrc="$HOME/.bashrc"
+
+# Use getopt to parse command arguments.
+options=`getopt    -o b::rc:fh \
+    --long backup::,remove,command,help,force \
+    -n $0 -- "$@"`
+
+# Proceed if everything is OK.
+if [ $? == 0 ] 
+then
+    # Set the parsed command options.
+    eval set -- "$options"
+
+    # Setup selected options
+    while true ; do
+        case "$1" in
+            -r|--remove) 
+                # Remove line instead of adding
+                insert='false'
+                shift 
+            ;;
+            -f|--force) 
+                # Force operation even if line already exists
+                force='true'
+                shift 
+            ;;
+            -h|--help) 
+                # Print usage 
+                echo "Usage: $0 (options)"
+                echo "\t-r|--remove\t\tRemove line instead of adding"
+                echo "\t-f|--force\t\tForce insert even if line already exists"
+                echo "\t-h|--help\t\tPrint usage"
+                echo "\t-b|--backup\t\tBackup bashrc file"
+                echo "\t-c|--command\tUse a custom command instead of cowsay"
+                exit 0;
+                shift 
+            ;;
+            -b|--backup)
+                # Backup bashrc file
+                backup='true'
+
+                # Optionally set backup file name
+                if [ $2 != '' ] 
+                then
+                    backup_file=$2
+                fi
+                shift 2
+            ;;
+            -c|--command)
+                # Use a specific command instead of cowsay
+                command=$2
+                shift 2
+            ;;
+            --) 
+                # Stop parsing options
+                shift
+                break
+            ;;
+            *) 
+                # Weird error
+                echo "Something went horribly, horribly wrong in the interior."
+                exit 1 
+            ;;
+            esac
+    done
+    
+    # Check if the command is already in there
+    if [ ! -e $bashrc ]
+    then
+        exists='0'
+    else
+        exists=`cat $bashrc | fgrep "$command" | wc -l`
+
+        # Backup on demand
+        if [ $backup == 'true' ]
+        then
+            cp $bashrc $backup
+        fi
+    fi
+
+    if [ $insert == 'true' ] 
+    then    
+        # Check if we should insert it nevertheless 
+        continue=`expr \( $force == 'true' \| $exists == '0' \) `
+        # echo "not $exists and $force is $continue"
+
+        # If possible, add the command in the appropriate place
+        if [ $continue != '0' ]
+        then
+            # Insert command into file
+            echo "$command" >> $bashrc
+        else
+            # Oh noes!
+            echo "$0: Command '$command' already exists in file '$bashrc'."
+            echo "$0: If you know what you're doing you can try the -f option."
+            exit 1;
+        fi
+
+    else
+        if [ $exists != '0' ]
+        then
+            # Remove all lines that match from file
+            cat $bashrc | fgrep -v "$command" > $bashrc
+        else
+            # Nothing to do...
+            echo "$0: Nothing to do - command '$command' not in file '$bashrc'."
+        fi
+    fi
+fi

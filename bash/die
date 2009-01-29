@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# Die roll script.
+#
+# Quick and dirty way to generate random numbers between one and N,
+# just like a die roll simulation.
+#
+# Parameters:
+#   Optionally, a number of sides for the die, 
+#   but if this is not supplied, 6 is used by default;
+#   if a series of parameters is provided, the script 
+#   rolls a die for each of the parameters.
+# Author:
+#   Konrad Siek 
+
+# Generates the random number from a date.
+function roll {
+    expr \( $(date +%N) % "$1" \) + 1
+}
+
+# Do the actual die rolls.
+if [ "$1" == "" ]
+then 
+    # If no argument is given, then roll a six-sider.
+    roll 6
+else
+    # Roll a die for each of the arguments.
+    while [ "$1" != "" ]
+    do
+        roll $1
+        shift
+    done
+
+fi
+

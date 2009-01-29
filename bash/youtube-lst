@@ -1,0 +1,26 @@
+#!/bin/bash
+# 
+# Batch downloader for youtube-dl
+# 
+# Prepare a list of addresses in a file and get
+# then with just one command, which does all the
+# tedious copy-and-pasting for you...
+#
+# Parameters
+#   Files contaning adresses.
+#   If you need to rename the files, prefix the
+#   addresses with: -o <filename>.flv
+# Requires
+#   youtube-dl to do the actual downloading
+#   (http://www.arrakis.es/~rggi3/youtube-dl/)
+# Author
+#   Konrad Siek
+
+# Expect each argument to be a file
+# and loop through all of these.
+for file in $@
+do
+    # Download each resource thorugh youtube-dl.
+    cat $file | \
+    awk '/^[ \t]*$/ {next}{system("youtube-dl "$0)}'
+done
