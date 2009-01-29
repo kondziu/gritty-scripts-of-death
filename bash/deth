@@ -1,0 +1,123 @@
+#!/bin/bash
+#
+# Deth
+#
+# A watchdog for the death of processes. After specifying 
+# the list of processes to watch (either by name of PID)
+# the script waits for them to turn off, in which case the 
+# specified command is run (and sent into the background).
+# When all watched processes die, the script exits.
+# 
+# The commands are translated into PIDs at the beginning 
+# only, so if you want to watch gcalctool, and, while this
+# script is already running, turn on another instance of
+# gcalctool, the new instance will be completely ignored.
+#
+# The script checks for the death of the specified processes
+# and then goes to sleep for a specified period of time. 
+# Since this does not need to be a very precise script, it's 
+# currently set to checking every 5 minutes - this can be
+# changed by modyfing the value of SLEEP_TIME.
+#
+# The script only watches processes which belong to the
+# current user. To modify this set the value of USERNAME.
+# 
+# Potential issues:
+#   When selecting by command name, all fitting PIDs
+#   are watched, without any further discrimination.
+# Parameters:
+#   List of running commands and/or PIDs.
+#   The last argument is always the command to run when
+#       each of them turns off.
+# Author:
+#   Konrad Siek
+#
+
+# How long to wait between pings. In seconds.
+SLEEP_TIME=300
+
+# Limit the watched processes to the current user.
+USERNAME=`whoami`
+
+# Check if enough arguments to even try getting the PIDs.
+if [ $# -lt 2 ] 
+then
+    echo -e "Usage: \n\t$0 [pids] [commands] action\n"
+    exit -1
+fi
+
+# Convert all arguments to a PID array
+declare -a array
+while [ "$2" != "" ]
+do 
+    if [ `expr "$1" : "[0-9][0-9]*"` != 0 ]
+    then
+        # Add PIDs to the array as they are.
+        if [ $(\
+            ps U $USERNAME -u $USERNAME -o pid \
+                        | grep "^ *$1 *\$" | wc -l) != 0 ]
+        then
+            array=( ${array[@]} $1 )
+        else
+            echo "PID $1 is not valid, ignoring." >& 2
+        fi
+    else
+        # Extract PIDs from name and add them to the array.
+        array=( ${array[@]} $(\
+            ps U $USERNAME -u $USERNAME -o pid,comm \
+            | awk -v f=$1 '$2==f {printf($1" ")}' ) )
+    fi    
+    shift
+done
+
+# The last parameter is the action done on death of processes.
+ACTION=$1
+
+# No array can be generated - no PIDs were discerned.
+if [ ${#array[@]} = 0 ] 
+then
+    echo "No PIDs were supplied." >& 2
+    exit -2
+fi
+
+# Work the magic. 
+while [ 1 ]
+do
+    # Check if anything changed, and act.
+    i=0; len=${#array[@]}
+    while [ $len -gt 0 ]
+    do                
+        # Ignore empty elements.
+        if [ "${array[$i]}" = '' ] 
+        then
+            # Point to next element
+            i=$(($i + 1))    
+            continue
+        fi    
+
+        # Fewer elements to visit left.
+        len=$((len - 1))
+
+        # Check if process dies.
+        if [ $(\
+                        ps U $USERNAME -u $USERNAME -o pid \
+                        | grep "^ *${array[$i]} *\$" | wc -l) = 0 ]
+        then
+            # Process is dead, execute action.
+            $ACTION &
+            unset array[$i]
+        fi
+
+        # Point to next element
+        i=$(($i + 1))
+    done    
+
+    # If nothing left to do, quit.
+    if [ ${#array[@]} = 0 ] 
+    then
+        exit 0;
+    fi
+
+    # Wait a bit before continuing.
+    sleep $SLEEP_TIME;
+done
