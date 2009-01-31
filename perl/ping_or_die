@@ -1,0 +1,72 @@
+#!/usr/bin/perl 
+#
+# Ping or die
+#
+# Pings all ip addresses and turns off the machine when 
+# all of them are dead.
+# If you need to run other commads, you can do that too. 
+#
+# Parameters:
+#	c - command to run,
+#	s - sleep time between pinging (in seconds),
+#	t - ping timeout (in seconds),
+#	IP addresses or hostnames to watch.
+# Example:
+#	Turn on the Rokudan when the router's down for a minute:
+#		ping_or_die -s 60 "mpg321 Rokudan.mp3" 10.0.0.2
+# Author:
+#   Konrad Siek
+
+# Packages
+use Net::Ping;
+use Getopt::Std;
+
+# Defaults
+my $command = "shutdown -h now";
+my $sleep_time = 300;
+my $timeout = 10;
+my $hosts = ();
+
+# Setup options
+my %options = ();
+getopt "cst", \%options;
+$command = @options{c} if defined @options{c};
+$sleep_time = @options{s} if defined @options{s};
+$timeout = @options{t} if defined @options{t};
+@hosts = @ARGV;
+
+# If no hosts were provided print help and exit.
+if (scalar @hosts < 1) {
+	print "Usage: $0 [options] list-of-ips\n";
+	print "\t-c\tcommand to run\n";
+	print "\t-s\tsleep time between pinging (in seconds)\n";
+	print "\t-t\tping timeout (in seconds)\n";	
+	exit -1;
+}
+
+# Setup ping - 30 second timeout
+$ping = Net::Ping->new("tcp", $timeout);
+
+# Main program
+my $again;
+do {
+	$again = 0;
+	# Wait some time before checking
+	sleep $sleep_time;
+	# Ping machines
+	foreach (@hosts) {
+		my $present = $ping->ping($_);
+		$again |= $present;
+	}
+} while ($again);
+
+# Finish up ping
+$ping->close();
+
+# Info
+print "$0: dead hosts: @hosts\n";
+print "$0: running command '$command'\n";
+
+# Run command
+system $command;
+
