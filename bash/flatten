@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Flatten
+#
+# Copies all the files from a given directory tree to one directory.
+# For instance, if you've got a directory tree like this one:
+# 	moo/cow.txt
+# 	other/cats/cheezburger.txt
+# 	other/cats/evil.txt
+# 	other/ferrets/evil.txt
+# The result of running `flatten . out` will be:
+# 	out/other_cats_cheezburger.txt
+# 	out/other_cats_evil.txt
+# 	out/other_ferrets_evil.txt
+# 	out/moo_cow.txt
+# Parameters:
+# 	source - which tree to copy, default: here,
+# 	target - where to dump the files, default: here.
+# Warning:
+#	Some names might overlap! Check if everything copied propery
+#	before removing anything.
+# Author:
+#	Konrad Siek
+
+# Set source.
+if [ "$1" == "" ] 
+then
+	source="."
+else
+	source="$1"
+fi
+
+# Set target.
+if [ "$2" == "" ]
+then 
+	target="."
+else
+	target="$2"
+fi
+
+# Copy all files.
+for i in `find "$source"`
+do 
+	if [ ! -d "$i" ] 
+	then
+		e=${i#./}
+		cp $i $target/${e//\//_}
+	fi
+done
