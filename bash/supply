@@ -1,0 +1,236 @@
+#!/bin/bash
+
+# Supply
+#
+# A script to supply your audio player with new audio files, with the
+# extra ability to control gain in oggs and mp3s.
+#
+# Usage:
+# 	t, target=<DIR> - Move media onto specified device
+# 	d, subdirectory=<DIR> - Move media to a dir on the device (opt.)
+# 	c, config=<FILE> - Apply specified configuration file (opt.)
+# 	g, gain - Apply specified gain value to all files (opt.)
+# 	q, quiet - Do not print info messages (but still print warnings)
+# 	<FILE LIST> - Act on these files and directories
+#
+# Requires:
+# 	vorbisgain
+# 	mp3gain
+#
+# Addendum regarding Ogg gain controls:
+# 	vorbisgain input files must be Ogg Vorbis I files with 1 or 2  
+# 	channels and  a  sample  rate  of 48 kHz, 44.1 kHz, 32 kHz, 24 
+# 	kHz, 22050 Hz, 16 kHz, 12 kHz, 11025 Hz or 8 kHz. If  an  input
+# 	file  contains  multiple streams  (i.e., it is chained), the 
+# 	streams must all have the same format, in terms of sampling 
+# 	frequency and number of channels. All streams in a chained file 
+# 	are processed, but  the ReplayGain tags are only written to (or 
+# 	removed from) the first stream. 
+#												-- vorbisgain(1)
+# License:
+# 	Copyright 2009 Konrad Siek <konrad.siek@gmail.com>
+# 	This program is free software: you can redistribute it and/or 
+# 	modify it under the terms of the GNU General Public License as 
+# 	published by the Free Software Foundation, either version 3 of 
+# 	the License, or (at your option) any later version. See 
+# 	<http://www.gnu.org/licenses/> for details.
+
+# Default settings
+target=/media/disk
+config=~/.supplyrc
+source=.
+quiet='false'
+#subdir=Books
+
+# Echo function with possible silencing
+function sysout {
+	if [ "$quiet" != 'true' ]
+	then
+		echo "$0: $1"
+	fi
+}
+
+# Echo function redirecting to standard error
+function syserr {
+	echo "$0: $1" >& 2
+}
+
+# Parse options
+options=$(\
+	getopt \
+	-o c:t:g:d:q \
+	--long gain:,target:,config:,subdirectory:,quiet \
+	-n $0 -- "$@" \
+)
+
+# Stop if there's some sort of problem
+if [ $? != 0 ] 
+then
+	syserr "Argh! Parsing went pear-shaped!"
+	exit 1
+fi
+
+# Set the parsed command options
+eval set -- "$options"
+
+# Setup selected options
+while [ 1 ]
+do
+	case "$1" in
+	-c|--config) 
+		config=$2
+		shift 2 
+	;;
+	-g|--gain)
+		gain=$2
+		shift 2
+	;;
+	-t|--target)
+		target=$2
+		shift 2
+	;;
+	-d|--subdirectory)
+		subdir=$2
+		shift 2
+	;;
+	-q|--quiet)
+		quiet='true'
+		shift 
+	;;
+	--) 
+		# Stop parsing options
+		shift
+		break
+	 ;;
+	*) 
+		# Weird error
+		syserr "Hide! It's gonna blow!"
+		exit 2 
+	;;
+	esac
+done
+
+# Source config file if one exists
+if [ -f $config ]
+then
+	sysout "Sourcing configuration file: $config"
+	. "$config"
+else
+	sysout "No configuration file present."
+fi
+
+# Create full path
+fullpath="$target/$subdir"
+
+# If destination doesn't exist...
+if [ -e $fullpath ]
+then
+	# Ok, so there is something there...
+	if [ ! \( -d $fullpath \) ] 
+	then
+		# ...but that something is not a directory!
+		syserr "$fullpath is not a directory"
+		exit 4
+	fi
+	if [ ! \( -w $fullpath \) ]
+	then
+		# ...but we can't write there!
+		syserr "No write permission for $fullpath"
+		exit 8
+	fi
+else
+	# Create destination
+	mkdir -p $fullpath 2> /dev/null
+	if [ "$?" != 0 ]	
+	then
+		syserr "Can't create destination $fullpath"
+		exit 16
+	fi
+fi
+
+# Apply gain, you daft bugger.
+# Seriously, do I have to spell it out for you?
+function gain {	
+	# Resolve extension
+	ext=$(echo "$1" | awk -F "." '{print $NF}')
+
+	# Use the correct damn gain modification tool
+	if [ \( "$ext" == "ogg" \) -o \( "$ext" == "oga" \) ]
+	then
+		# Print short info
+		sysout "Setting gain to $gain for $(basename "$1") using vorbisgain"
+
+		# Run gain update for oggs
+		vorbisgain -q -g $gain "$1" 2> /dev/null
+	elif [ "$ext" == "mp3" ]
+	then
+		# Print short info
+		sysout "Setting gain to $gain for $(basename "$1") using mp3gain"
+
+		# Run gain update for mp3s
+		mp3gain -k -q -g $gain "$1" 2> /dev/null
+	else
+		syserr "Skiping gain modification for $(basename "$1")"
+	fi
+}
+
+# Process an unknown file type
+# (Direcotries are also a kind of file...)
+function resolve {
+	relative=$topdir${1:$cutoff}
+	#echo $cutoff $relative
+
+	if [ ! -d "$1" ] 
+	then
+		sysout "Copying $(basename "$1") to $(dirname "$fullpath/$relative")"
+
+		# Copy a file to destination
+		cp "$1" "$fullpath/$relative"
+
+		# Apply gain modification
+		if [ "$gain" != "" ]
+		then
+			gain "$fullpath/$relative"
+		fi
+	else
+		sysout "Creating directory $fullpath/$relative"
+
+		# Create a directory at destination
+		mkdir -p "$fullpath/$relative"
+
+		# Copy stuff
+		cp_dir "$1"
+
+		# TODO This could be optional...
+	fi
+}
+
+# Process a directory
+function cp_dir {
+	find "$1" | while read f
+	do 
+		# Do NOT work on your own self, dumbass!
+		if [ "$f" == "$1" ]
+		then
+			continue
+		fi
+
+		# But work on everything else, accordingly
+		resolve "$f"
+	done
+}
+
+# Copy files from the sources to the destination directory
+if [ "$#" == 0 ] 
+then
+	# If no paths were given, use the current directory
+	cp_dir "."	
+else
+	for arg
+	do 
+		cutoff=${#arg}
+		topdir=$(basename "$arg")/
+
+		resolve "$arg"
+	done
+fi

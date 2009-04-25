@@ -1,0 +1,19 @@
+#!/bin/bash
+# Filename: ~/.supplyrc
+# Default settings for supply.sh
+
+# Path to the device. Where to put the files by default. 
+# Needs to be a directory and end in a slash (/).
+target=/tmp/target/
+
+# Where to put the files on the device pointed to by $target.
+# Needs to be a directory and end in a slash (/).
+subdir=Books/
+
+# Gain setup. Leave commented out to have no gain by default.
+# An arbitrary number.
+# gain=0
+
+# Quiet mode: print messages, or not.
+# Allowed values: true, false.
+# quiet=true
