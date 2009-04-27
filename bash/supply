@@ -9,8 +9,9 @@
 # 	t, target=<DIR> - Move media onto specified device
 # 	d, subdirectory=<DIR> - Move media to a dir on the device (opt.)
 # 	c, config=<FILE> - Apply specified configuration file (opt.)
-# 	g, gain - Apply specified gain value to all files (opt.)
+# 	g, gain=<NUMBER - Apply specified gain value to all files (opt.)
 # 	q, quiet - Do not print info messages (but still print warnings)
+# 	v, verbose - Print info messages (opposite of quiet)
 # 	<FILE LIST> - Act on these files and directories
 #
 # Requires:
@@ -58,8 +59,8 @@ function syserr {
 # Parse options
 options=$(\
 	getopt \
-	-o c:t:g:d:q \
-	--long gain:,target:,config:,subdirectory:,quiet \
+	-o c:t:g:d:q:v \
+	--long gain:,target:,config:,subdirectory:,quiet,verbose \
 	-n $0 -- "$@" \
 )
 
@@ -82,19 +83,23 @@ do
 		shift 2 
 	;;
 	-g|--gain)
-		gain=$2
+		custom_gain=$2
 		shift 2
 	;;
 	-t|--target)
-		target=$2
+		custom_target=$2
 		shift 2
 	;;
 	-d|--subdirectory)
-		subdir=$2
+		custom_subdir=$2
 		shift 2
 	;;
 	-q|--quiet)
-		quiet='true'
+		custom_quiet='true'
+		shift 
+	;;
+	-v|--verbose)
+		custom_quiet='false'
 		shift 
 	;;
 	--) 
@@ -118,6 +123,12 @@ then
 else
 	sysout "No configuration file present."
 fi
+
+# Apply the so-called custom settings
+if [ $custom_gain ]; then gain=$custom_gain; fi
+if [ $custom_target ]; then target=$custom_target; fi
+if [ $custom_subdir ]; then subdir=$custom_subdir; fi
+if [ $custom_quiet ]; then quiet=$custom_quiet; fi
 
 # Create full path
 fullpath="$target/$subdir"
@@ -207,7 +218,7 @@ function resolve {
 
 # Process a directory
 function cp_dir {
-	find "$1" | while read f
+	find "$1" | sort | while read f
 	do 
 		# Do NOT work on your own self, dumbass!
 		if [ "$f" == "$1" ]
