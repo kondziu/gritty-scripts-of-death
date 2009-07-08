@@ -1,0 +1,221 @@
+#!/bin/bash
+#
+# Commenter
+#
+# A simple program to include a generic c-style header comment to a
+# Java project. The comment includes the classname, the version 
+# number and date, and the copyright notice -- as specified in the 
+# code convention for the Java language, available at: 
+# <http://java.sun.com/docs/codeconv/>
+#
+# Parameters:
+# 	-o|--output-dir	output directory for the generated files,
+# 					default: current working directory, i.e., HERE;
+# 	-a|--author		set author for the copyright notice,
+# 					default: the current system user;
+# 	-y|--year		set the year for the copyright notice,
+# 					default: the current year;
+# 	-d|--date		set date for of creation for the comment,
+# 					default: the current date;
+# 	-v|--version	set the default version for all files,
+# 					default: 1.0;
+#	--verbose		display additional info.
+# Author:
+# 	Konrad Siek <konrad.siek@gmail.com>
+#
+# License information:
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009 Konrad Siek
+
+# Sets unset variables to some presets.
+function initiate_presets() {
+	[ "$output_dir" == "" ] && output_dir=$(pwd)
+	[ "$date" == "" ] && date=$(date +'%-d %B %Y')
+	[ "$year" == "" ] && year=$(date +%Y) 
+	[ "$version" == "" ] && version=1.0
+	[ "$author" == "" ] && author=$(whoami)
+	[ "$extension" == "" ] && extension=.java
+}
+
+# Print an error to stderr
+# @param error message
+function syserr() {
+	echo "$0: $@" >& 2
+}
+
+# Generate a single comment from a list of strings.
+# @param zero or more strings
+# @return c-style comment string
+function generate_comment() {	
+	echo "/*"	
+	if (( $# == 0 ))
+	then
+		echo " * "
+	else
+		while (( $# >  0 ))
+		do
+			echo " * $1"
+			if (( $# >  1 ))
+			then
+				echo " * "
+			fi
+			shift
+		done
+	fi	
+	echo " */"
+}
+
+# Copy a file with and append a generated file comment.
+# @param absolute file path
+function comment () {
+	comment=$( \
+		generate_comment \
+			"$(basename "$1" $extension)" \
+			"Version $version" \
+			"Date $date" \
+			"Copyright $year $author" \
+	)
+
+	package=$(dirname ${1:${#base_dir}})
+	output=$output_dir$package/$(basename "$1")
+
+	if [ $verbose ]
+	then 
+		echo "Commenting file '$1' as '$output'."
+	fi
+
+	mkdir -p $(dirname "$output")
+	echo -e "$comment" | cat - "$1" > "$output"
+}
+
+# Apply transformation to an entire project or directory.
+# @param absolute directory path
+function comment_dir () {
+	base_dir="$1"
+	find "$1" -type f -name "*$extension" | \
+	while read f
+	do
+		comment "$f"
+	done
+}
+
+# Apply transformation to a file or directory.
+# @param resource path
+function comment_resource () {
+	if [ ! \( -e "$1" \) ] 
+	then
+		syserr "Resource '$1' does not exist."
+		return 1
+	fi
+
+	input=$(readlink -f "$1")
+	if [ -d "$input" ]
+	then
+		comment_dir "$input"
+	else
+		base_dir=$(dirname "$input")
+		comment "$input"
+	fi	
+}
+
+# Parse options
+options=$( \
+	getopt \
+	-o o:v:a:d:y:e: \
+	--long output-dir:,version:,author:,date:,year:,extension:,verbose \
+	-n $0 -- "$@" \
+)
+
+# Stop if there's some sort of problem
+if [ $? != 0 ] 
+then
+	syserr "Argh! Parsing went pear-shaped!"
+	exit 1
+fi
+
+# Set the parsed command options
+eval set -- "$options"
+
+# Setup selected options
+while true
+do
+	case "$1" in
+	-o|--output-dir) 
+		output_dir="$2"
+		shift 2 
+	;;
+	-v|--version)
+		version="$2"
+		shift 2
+	;;
+	-a|--author)
+		author="$2"
+		shift 2
+	;;
+	-y|--year)
+		year="$2"
+		shift 2
+	;;
+	-d|--date)
+		date="$2"
+		shift 2
+	;;
+	-e|--extension)
+		[ ${2:0:1} == . ] && extension="$2" || extension=".$2"
+		shift 2
+	;;
+	--verbose)
+		verbose=true
+		shift 1
+	;;
+	--) 
+		# Stop parsing options
+		shift
+		break
+	 ;;
+	*) 
+		# Weird error
+		syserr "The end of the world is nigh!"
+		exit 2 
+	;;
+	esac
+done
+
+# Process configuration
+initiate_presets
+
+if [ $verbose ]
+then
+	echo "Output: $output_dir"
+	echo "Date: $date"
+	echo "Version: $version"
+	echo "Author: $author"
+	echo "Year: $year"
+	echo "Extension: $extension"
+fi
+
+# Process inputs
+if [ "$#" == 0 ] 
+then
+	# If no paths were given, use the current directory.
+	comment_resource .
+else
+	# If some paths were given, comment them each individually.
+	for arg
+	do 
+		comment_resource "$arg"
+	done
+fi
