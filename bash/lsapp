@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# lsapp
+#
+# A simple script to list applications installed on the system. 
+#
+# An application is simply a package that is refered to in a .desktop 
+# by the property "X-AppInstall-Package". These files are located in
+# /usr/share/app-install/desktop.
+#
+# The script may take some time to run, and does not remove duplicate
+# entries.
+#
+# Requires:
+# 	dpkg
+# 	gnome-app-install
+# Author:
+# 	Konrad Siek <konrad.siek@gmail.com>
+#
+# License information:
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009 Konrad Siek
+
+# Directory containing .desktop files.
+DESKTOP_DIR=/usr/share/app-install/desktop
+
+# The property in .desktop files that gives you the actual package name.
+PROPERTY=X-AppInstall-Package
+
+# Iterate over all the files in that directory.
+find "$DESKTOP_DIR" -type f | while read file
+do
+	# Get package name from the desktop file.
+	package=`tac "$file" | \
+		awk -F '=' -v key="$PROPERTY" '$1 == key {print $2; exit}'`
+
+	# No package found, go to next file.
+	if [ -z "$package" ]
+	then
+		continue
+	fi
+
+	# Check if a package is installed.
+	dpkg -s "$package" > /dev/null 2> /dev/null 
+	if [ $? == 0 ] 
+	then
+		# If so, print out the name.
+		echo "$package" 	
+	fi
+done
