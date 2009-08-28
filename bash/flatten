@@ -39,11 +39,8 @@ else
 fi
 
 # Copy all files.
-find "$source" | while read i
+find -L "$source" -not -type d | while read i
 do 
-	if [ ! -d "$i" ] 
-	then
-		e=${i#./}
-		cp "$i" "$target/${e//\//_}"
-	fi
+	e=${i#./}
+	cp "$i" "$target/${e//\//_}"
 done
