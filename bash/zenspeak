@@ -12,9 +12,10 @@
 # Depends:
 # 	espeak 		(apt:espeak)
 # 	festival	(apt:festival)
+# 	zenity		(apt:zenity)
 #
 # Author:
-# 	Konrad Siek
+# 	Konrad Siek	<konrad.siek@gmail.com>
 #
 # License information:
 #
