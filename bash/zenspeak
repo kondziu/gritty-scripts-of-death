@@ -1,0 +1,79 @@
+#!/bin/bash
+# 
+# Zenspeak
+#
+# Provides a simple graphical (Gtk) interface to a speech production system:
+# either espeak or festival. It's really simple too: you put in some text, 
+# the text is spoken. When you put in zero text, the program ends.
+# 
+# Parameters:
+# 	None
+#
+# Depends:
+# 	espeak 		(apt:espeak)
+# 	festival	(apt:festival)
+#
+# Author:
+# 	Konrad Siek
+#
+# License information:
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009 Konrad Siek
+
+# System for production of sound is selected by the parameter, 
+# or the defaut is used if none were specified.
+SYSTEM_DEFAULT=espeak
+SYSTEM=`(( $# == 0 )) && echo "$SYSTEM_DEFAULT" || echo "$1"`
+echo $SYSTEM
+
+# System dependent settings for espeak:
+espeak_speed=120		 	# default: 160
+espeak_pitch=60 			# 0-99, default: 50
+espeak_amplitude=20			# 0-20, default: 10
+espeak_voide=english		# list of voices: `espeak --voices`
+espeak_variant=f2			# m{1,6}, f{1,4}
+
+# I'm completely pants when it comes to setting up festival, so I won't 
+# even attempt it here.
+
+while true
+do
+	# Show dialog and get user input.
+	something=`zenity --entry --title="Say something..." --text="Say:"`
+	
+	# If no user input or cancel: bugger off (and indicate correct result).
+	if [ -z "$something" ]
+	then
+		exit 0
+	fi
+
+	# Put the input through either espeak or festival.
+	if [ "$SYSTEM" == "espeak" ] 
+	then
+		# Note: the sound is padded within pulse, so that it can be 
+		# played simultaneously with other sources.
+		padsp espeak \
+			-a $espeak_amplitude \
+			-p $espeak_pitch \
+			-s $espeak_speed \
+			-v $espeak_voice+$espeak_variant \
+			"$something"
+	elif [ "$SYSTEM" == "festival" ]
+	then
+		# Incidentally, that's all I know about festival.
+		echo "$something" | festival --tts
+	fi	
+done
