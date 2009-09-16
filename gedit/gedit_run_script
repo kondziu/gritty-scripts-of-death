@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Open the document's directory (just in case)
+cd $GEDIT_CURRENT_DOCUMENT_DIR;
+
+# Display information about script
+echo -e "Running script: $GEDIT_CURRENT_DOCUMENT_NAME";
+echo -e "\tin directory: $GEDIT_CURRENT_DOCUMENT_PATH";
+echo -e "\n";
+
+# Run script
+$GEDIT_CURRENT_DOCUMENT_PATH;

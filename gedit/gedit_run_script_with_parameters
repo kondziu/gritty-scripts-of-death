@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Get parameters for command from user.
+params=`zenity --entry --title="Run $GEDIT_CURRENT_DOCUMENT_NAME" --text="with these parameters"`
+
+# Open the document's directory (just in case)
+cd $GEDIT_CURRENT_DOCUMENT_DIR;
+
+# Display information about script
+echo -e "Running script: $GEDIT_CURRENT_DOCUMENT_NAME";
+echo -e "\tin directory: $GEDIT_CURRENT_DOCUMENT_PATH";
+echo -e "\twith params: $params";
+echo -e "\n";
+
+# Run script
+$GEDIT_CURRENT_DOCUMENT_PATH $params;

@@ -1,0 +1,17 @@
+#!/bin/bash
+text=`xargs -0 echo`
+
+SYSTEM=espeak
+
+if [ -n "$text" ]
+then
+	echo "Reading \"$text\" with $SYSTEM."
+	
+	if [ $SYSTEM == espeak ]
+	then
+		padsp espeak "$text" -v en+f3
+	elif [ $SYSTEM == festival ] 
+	then
+		echo "$text" | festival --tts
+	fi
+fi
