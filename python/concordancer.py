@@ -61,7 +61,7 @@ OPTIONS = {\
 }
 
 # Character constants, also for convenience.
-EMPTY=""
+EMPTY = ""
 SPACE = " "
 NEWLINE = "\n"
 TAB = "\t"
@@ -111,7 +111,7 @@ def find_concordances(keywords, words, context_size):
 	return concordances
 
 def find_all_concordances(words, context_size):
-	""" Make a complete concordance - assume all words match.
+	"""	Make a complete concordance - assume all words match.
 
 	@param words - input text as a list of words
 	@param context_size - number of words that should surround a keyword
@@ -166,7 +166,7 @@ def prep_concordance_map(dict_words):
 	return concordances
 
 def matches(word_a, word_b):
-	""" Case insensitive string equivalence.
+	"""	Case insensitive string equivalence.
 
 	@param word_a - first string
 	@param word_b - second string (duh)
@@ -201,7 +201,7 @@ def read_stdin():
 	return words
 
 def read_option(key, options, default):
-	""" Get an option from a map, or use a default.
+	"""	Get an option from a map, or use a default.
 	
 	@param key - option key
 	@param options - option map
@@ -273,11 +273,4 @@ if __name__ == '__main__':
 
 	# If evverything is in order, start concordancing.
 	process(options, arguments, input)
-	
-# The processing starts here.
-#if __name__ == '__main__':
-#	if len(sys.argv) == 1:
-#		display_help(sys.argv[0])
-#	else:
-#		process(sys.argv[1:])
 
