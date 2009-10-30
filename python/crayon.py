@@ -5,6 +5,35 @@
 # A simple script to color your text and wotnot. This basically uses 
 # \033-type sequences and color codes that may or may not work with your 
 # shell.
+#
+# Parameters:
+# 	-s STYLE | --style=STYLE		Specify a style (see list below).
+# 	-c COLOR | --color=COLOR		Specify a color (see list below).
+# 	-b COLOR | --background=COLOR	Specify a color (see list below).
+# 	-k | --keep-style		Do not reset styles after echo-ing.
+# 	-d | --default			Reset settings.
+# 	-n | --no-newline		Do not append a new line to the result.
+# 	-r | --raw				Print control sequences without applying them.
+# 	-h | --help				Print usage information (this).
+#
+# Author:
+# 	Konrad Siek <konrad.siek@gmail.com>
+#
+# License:
+# 	Copyright 2008 Konrad Siek 
+#
+# 	This program is free software: you can redistribute it and/or modify
+# 	it under the terms of the GNU General Public License as published by
+# 	the Free Software Foundation, either version 3 of the License, or
+# 	(at your option) any later version.
+#
+# 	This program is distributed in the hope that it will be useful,
+# 	but WITHOUT ANY WARRANTY; without even the implied warranty of
+# 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# 	GNU General Public License for more details.
+#
+# 	You should have received a copy of the GNU General Public License
+# 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
 from getopt import getopt
@@ -77,7 +106,7 @@ def echo(style, out = sys.stdout):
 
 def color_of_str(s):
 	"""Translate the string to a color code."""
-	if s.isdigit() and s in COLORS.values():
+	if s.isdigit() and int(s) in COLORS.values():
 		return int(s)
 	if s in COLORS:
 		return COLORS[s]
@@ -85,7 +114,7 @@ def color_of_str(s):
 
 def style_of_str(s):
 	"""Translate the string to a string code."""
-	if s.isdigit() and s in STYLES.values():
+	if s.isdigit() and int(s) in STYLES.values():
 		return int(s)
 	if s in STYLES:
 		return STYLES[s]
