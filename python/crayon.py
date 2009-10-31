@@ -108,16 +108,16 @@ def color_of_str(s):
 	"""Translate the string to a color code."""
 	if s.isdigit() and int(s) in COLORS.values():
 		return int(s)
-	if s in COLORS:
-		return COLORS[s]
+	if s.lower() in COLORS:
+		return COLORS[s.lower()]
 	raise Exception("Unrecognized color: %s" % s);
 
 def style_of_str(s):
 	"""Translate the string to a string code."""
 	if s.isdigit() and int(s) in STYLES.values():
 		return int(s)
-	if s in STYLES:
-		return STYLES[s]
+	if s.lower() in STYLES:
+		return STYLES[s.lower()]
 	raise Exception("Unrecognized style: %s" % s);
 	
 def usage(command_name):
