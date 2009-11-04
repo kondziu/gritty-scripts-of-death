@@ -1,0 +1,183 @@
+#!/usr/bin/python
+
+import sys
+import os
+import locale
+import simplejson
+import mx.DateTime
+import crayon
+
+LOCAL_GET_DIR = 'get/'
+LOCAL_POST_DIR = 'post/'
+LOCAL_SERVICES_DIR = 'services/'
+
+SERVICE_COLORS = {
+	'Identica': crayon.GREEN,
+	'Twitter': crayon.CYAN,
+	None: crayon.RED,
+}
+
+LINK_STYLES = {
+	'!': crayon.UNDERLINE,
+	'@': crayon.UNDERLINE,
+	'#': crayon.BOLD
+}
+
+def update(status):
+	known_services = get_services()
+	for service in known_services:
+		file = open(os.path.join(LOCAL_POST_DIR, service), 'a')
+		file.write(status + "\n")
+		file.close()
+		
+def to_json(string):
+	return simplejson.loads(string)
+
+# Stolen from Gwibber.
+def parse_time(time_string):
+	loc = locale.getlocale(locale.LC_TIME)
+	locale.setlocale(locale.LC_TIME, 'C')
+	result = mx.DateTime.Parser.DateTimeFromString(time_string)
+	locale.setlocale(locale.LC_TIME, loc)
+	return result.ticks()
+
+def insert(needle, haystack):
+	needle_date = parse_time(needle['created_at'])
+	#print 'haystack', haystack
+	for i in range(0, len(haystack)):
+		#print 'bit of haystack', haystack[i]
+		date = parse_time(haystack[i]['created_at'])
+		#print date, '>', needle_date
+		if date > needle_date:
+			haystack.insert(i, needle)
+			return;
+	haystack.append(needle)
+
+def sort(services):
+	output = []
+	#print services
+	for service_key in services:
+		#print 'service_key', service_key
+		service_data = services[service_key]
+		#if service_data == NoNe
+		# insertion sort
+		for data in service_data:
+			#print 'data', data
+			data['omg.service'] = service_key 
+			insert(data, output)
+	output.reverse()
+	return output
+
+def get_services():
+	services = []
+	sources = os.listdir(LOCAL_SERVICES_DIR)
+	for source in sources:
+		if source.endswith('~'):
+			continue
+		services.append(source)
+	return services
+
+def show(n = 10, format = '%s'):
+	#if n == None:
+	known_services = get_services()
+	sources = os.listdir(LOCAL_GET_DIR)
+	service_map = {}
+	for source in sources:
+		if not source in known_services:
+			continue
+		file = open(os.path.join(LOCAL_GET_DIR, source), 'r')
+		content = file.read()
+		#print 'content', content
+		file.close()
+		
+		service_map[source]=to_json(content)
+	#print 'source', source, service_map
+	statuses = sort(service_map)
+	
+	for status in statuses:
+		if n != None:
+			if n > 0:
+				n -= 1
+			else:
+				break;
+		print format_message(status)
+		#print status['user']['name'], status[''],
+		#print n, status['created_at'], status['user']['name'], status['omg.service'], status['text']
+	#else:
+	#	pass
+
+def mark_link(text):
+	for prefix in LINK_STYLES:
+		if text.startswith(prefix):
+			style = LINK_STYLES[prefix]
+			return crayon.style(style) + text + crayon.default()
+	return text
+
+def format_message(status):
+	service = status['omg.service']
+	service_color = SERVICE_COLORS[None]
+	if service in SERVICE_COLORS:
+		service_color = SERVICE_COLORS[service]
+	input = (
+		status['user']['name'],
+		status['user']['screen_name'],
+		status['created_at'],
+	)
+	header =  crayon.fg(service_color) + "%s (%s)\t[%s]" % input
+
+	#text_chunks = []	
+	#for s in status['text'].split():
+	#	for c in LINK_STYLES
+	#		if s.startswith(c):
+	#			s = crayon.style(LINK_STYLES[c]) + s + crayon.default()
+	#			text_chunks.append(s)
+	#
+	text_list = []
+	for word in status['text'].split():
+		text_list.append(mark_link(word))
+	text = ' '.join(text_list)
+	
+	return header + crayon.default() + "\n" + text
+
+def usage():
+	print 'usage'
+
+# A very simple client
+# Modes of operation:
+# 	update <status>
+#	show
+# 	show <n> [FORMAT]
+# 	show all [FORMAT]
+if __name__ == '__main__':
+	if len(sys.argv) == 0:
+		print 0
+		usage()
+	command = sys.argv[1]
+	arguments = sys.argv[2:]
+	if command == 'say':
+		update(' '.join(arguments))
+	elif command == 'show':
+		if len(arguments) == 0:
+			show()
+		elif len(arguments) <= 2:
+			n = 0
+			if arguments[0] == 'all':
+				n = None
+			else:
+				try:
+					n = int(arguments[0])
+				except:
+					print 'non int'	
+					usage()
+			if len(arguments) == 2:
+				show(n, arguments[1])
+			else:
+				show(n)	
+		#elif len(arguments) == 2:
+		else:
+			print 'arg len > 2'
+			usage()	
+	else:
+		print 'unknown com'
+		usage()
+

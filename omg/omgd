@@ -1,0 +1,198 @@
+#!/usr/bin/python
+
+import os
+import time
+import fcntl
+import signal
+import base64
+import getpass
+import simplejson
+import urllib, urllib2
+
+from threading import Thread
+
+# Program info
+PROGRAM_NAME = 'omg'
+
+# Local filesystem constants
+LOCAL_SERVICES_DIR = 'services/'
+LOCAL_POST_DIR = 'post/'
+LOCAL_GET_DIR = 'get/'
+
+# Connection constants
+KEY_AUTHORIZATION = 'Authorization'
+KEY_BASIC = 'Basic'
+
+# Standard (made-up) API keys
+API_FRIENDS = 'friends'
+API_PUBLIC = 'public'
+API_UPDATE = 'update'
+
+# JSON keys
+JSON_ID = 'id'
+JSON_USER = 'user'
+JSON_NAME = 'name'
+JSON_TEXT = 'text'
+JSON_CREATED_AT = 'created_at'
+JSON_SCREEN_NAME = 'screen_name'
+JSON_STATUS = 'status'
+JSON_SOURCE = 'source'
+JSON_ADDRESS = 'address'
+JSON_LOGIN = 'login'
+JSON_PASSWORD = 'password'
+JSON_API = 'api'
+JSON_DELAY = 'delay'
+JSON_SINCE_ID = 'since_id'
+
+def get_messages(directory, name):
+	path = "%s/%s" % (directory, name)
+	file = open(path, 'r')
+	string = file.read()
+	file.close()
+	if string.strip() != '':
+		return simplejson.loads(string)
+	else:
+		return []
+
+def get_last_id(messages):
+	max = 1
+	for message in messages:
+		if max < message[JSON_ID]:
+			max = message[JSON_ID]
+	print 'max id:', max
+	return max
+
+def get_last_id_from_file(directory, name):
+	messages = get_messages(directory, name)
+	return get_last_id(messages)
+
+def write_messages(directory, name, json):
+	path = "%s/%s" % (directory, name)
+	file = open(path, 'w')
+	file.write(simplejson.dumps(json))
+	file.close()
+
+def update_messages(directory, name, json, last_id):
+	print "update messages (%s):" % name, len(json)
+	if len(json) == 0:
+		return last_id
+	old_json = get_messages(directory, name)
+	new_json = json + old_json
+	write_messages(directory, name, new_json)
+	return get_last_id(new_json)
+
+def load_services(directory):
+	services = []
+	paths = os.listdir(directory)
+	for path in paths:
+		if path.endswith('~'):
+			continue
+			
+		file = open("%s/%s" % (directory, path), 'r')
+		string = file.read()
+		file.close()
+		
+		json = simplejson.loads(string)
+		name = json[JSON_NAME];
+		address = json[JSON_ADDRESS];
+		login = json[JSON_LOGIN];
+		password = json[JSON_PASSWORD];
+		api = json[JSON_API];
+		delay = json[JSON_DELAY];
+
+		id = get_last_id_from_file(LOCAL_GET_DIR, name)
+		
+		while password == '':
+			password = getpass.getpass("%s password:" % name)
+		
+		service = Service(name, address, login, password, api, delay, id, update_messages)
+		services.append(service)
+		
+	return services
+
+def load_updates(directory, name):
+	try:
+		path = "%s/%s" % (directory, name)
+		print 'opening %s' % path
+		file = open(path, 'r')
+		lines = file.readlines()
+		file.close()	
+		print 'found %s' % len(lines)	
+		os.remove(path)
+		return lines
+	except:
+		return []
+
+def update_services(directory, services):
+	for service in services:
+		updates = load_updates(directory, service.name)
+		for status in updates:
+			print "%s update: %s" % (service.name, status)
+			service.update(status) # Arguments?
+
+class Service (Thread):
+	def __init__(self, name, url, login, password, api, delay, id, handler):
+		Thread.__init__(self)
+		self.name = name
+		self.api = api
+		self.address = url
+		self.delay = delay
+		self.authorization_information = "%s:%s" % (login, password)
+		self.last_id = id
+		self.store = handler
+		
+	def get_authorization_information(self):
+		authorization = base64.encodestring(self.authorization_information)
+		return "%s %s" % (KEY_BASIC, authorization.strip())			
+		
+	def request(self, api_key, arguments = '', data = None):
+		address = "%s/%s?%s" % (self.address, self.api[api_key], arguments)
+		print "request (%s):" % self.name, address
+		header = {KEY_AUTHORIZATION: self.get_authorization_information()}
+		request = urllib2.Request(address, data, header)
+		connection = urllib2.urlopen(request)
+		return simplejson.loads(connection.read())
+		
+	def update(self, status, arguments = ''):
+		json_data = {
+			JSON_STATUS: status,
+			JSON_SOURCE: PROGRAM_NAME,
+		}
+		print "send status (%s):" % self.name, status		
+		data = urllib.urlencode(json_data)
+		return self.request(API_UPDATE, arguments, data) 
+
+	def run(self):
+		while True:
+			since_id = self.api[JSON_SINCE_ID] % self.last_id
+			messages = self.request(API_FRIENDS, since_id)
+			last_id = self.store(LOCAL_GET_DIR, self.name, messages, self.last_id)
+			time.sleep(self.delay)
+			self.last_id = last_id
+
+def observe(handler):
+	signal.signal(signal.SIGIO, handler)
+	file = os.open(LOCAL_POST_DIR,  os.O_RDONLY)
+	mask = fcntl.DN_MODIFY | fcntl.DN_CREATE | fcntl.DN_MULTISHOT
+	fcntl.fcntl(file, fcntl.F_SETSIG, 0)
+	fcntl.fcntl(file, fcntl.F_NOTIFY, mask)
+		
+if __name__ == '__main__':
+	services = load_services(LOCAL_SERVICES_DIR)
+	
+	for service in services:
+		service.start()
+
+	def handle(signum, frame):	
+		print "changes occured in %s" % LOCAL_POST_DIR, signum, frame
+		time.sleep(10)
+		update_services(LOCAL_POST_DIR, services)
+
+	update_services(LOCAL_POST_DIR, services)
+	observe(handle)
+
+	while True:
+		time.sleep(240)
+		
+	#for service in services:
+	#	service.join()

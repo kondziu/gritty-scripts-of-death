@@ -1,0 +1,13 @@
+{
+	"name": "Identica",
+	"address": "http://identi.ca/api/",
+	"login": "kondziu",
+	"password": "",
+	"api": {
+		"friends": "statuses/friends_timeline.json",
+		"public": "statuses/public_timeline.json",
+		"update": "statuses/update.json",
+		"since_id": "since_id=%s"
+	},
+	"delay": 60
+}
