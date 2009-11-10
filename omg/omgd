@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Copyright 2009 Konrad Siek
+
 import os
 import time
 import fcntl
@@ -44,14 +46,36 @@ JSON_API = 'api'
 JSON_DELAY = 'delay'
 JSON_SINCE_ID = 'since_id'
 
+# Logging level constants
+LOG_INFO = 'INFO'
+LOG_WARNING = 'WARN'
+LOG_ERROR = 'ERROR'
+
+# Buffers
+#post_buffer = {}
+#get_buffer = {}
+
+def log(string, type=LOG_INFO):
+	#lock
+	print '[%s]\t%s' % (type, string)
+	#unlock
+
+# File I/O
 def get_messages(directory, name):
-	path = "%s/%s" % (directory, name)
-	file = open(path, 'r')
-	string = file.read()
-	file.close()
-	if string.strip() != '':
-		return simplejson.loads(string)
-	else:
+	path = os.path.join(directory, name)
+	try:
+		file = open(path, 'r')
+		string = file.read()
+		file.close()
+		if string.strip() != '':
+			result = simplejson.loads(string)
+			log('File %s contains %d entries' % (path, len(result)))
+			return result
+		else:
+			log('File %s was empty' % path)
+			return []
+	except:
+		log('File %s could not be read' % path, LOG_WARNING)
 		return []
 
 def get_last_id(messages):
@@ -59,36 +83,41 @@ def get_last_id(messages):
 	for message in messages:
 		if max < message[JSON_ID]:
 			max = message[JSON_ID]
-	print 'max id:', max
 	return max
 
+# File I/O
 def get_last_id_from_file(directory, name):
 	messages = get_messages(directory, name)
 	return get_last_id(messages)
 
+# File I/O
 def write_messages(directory, name, json):
-	path = "%s/%s" % (directory, name)
+	path = os.path.join(directory, name)
 	file = open(path, 'w')
 	file.write(simplejson.dumps(json))
 	file.close()
 
 def update_messages(directory, name, json, last_id):
-	print "update messages (%s):" % name, len(json)
 	if len(json) == 0:
 		return last_id
+	# consider read buffer
 	old_json = get_messages(directory, name)
 	new_json = json + old_json
+	# consider write buffer
 	write_messages(directory, name, new_json)
 	return get_last_id(new_json)
 
-def load_services(directory):
+# File I/O
+def load_services(directory, credentials={}):
 	services = []
 	paths = os.listdir(directory)
 	for path in paths:
 		if path.endswith('~'):
+			log('Omitting service configuration: %s' % path)
 			continue
 			
-		file = open("%s/%s" % (directory, path), 'r')
+		log('Loading service configuration: %s' % path)
+		file = open(os.path.join(directory, path), 'r')
 		string = file.read()
 		file.close()
 		
@@ -101,6 +130,9 @@ def load_services(directory):
 		delay = json[JSON_DELAY];
 
 		id = get_last_id_from_file(LOCAL_GET_DIR, name)
+
+		if name in credentials:
+			login, password = credentials[service]
 		
 		while password == '':
 			password = getpass.getpass("%s password:" % name)
@@ -110,24 +142,26 @@ def load_services(directory):
 		
 	return services
 
+# File I/O
 def load_updates(directory, name):
+	path = os.path.join(directory, name)
 	try:
-		path = "%s/%s" % (directory, name)
-		print 'opening %s' % path
 		file = open(path, 'r')
 		lines = file.readlines()
 		file.close()	
-		print 'found %s' % len(lines)	
 		os.remove(path)
+		log('Loaded %d updates from file %s' % (len(lines), path))
 		return lines
 	except:
+		log('File %s could not be loaded' % path)
 		return []
 
 def update_services(directory, services):
 	for service in services:
+		# consider buffer
 		updates = load_updates(directory, service.name)
 		for status in updates:
-			print "%s update: %s" % (service.name, status)
+			status = status.rstrip()
 			service.update(status) # Arguments?
 
 class Service (Thread):
@@ -147,25 +181,33 @@ class Service (Thread):
 		
 	def request(self, api_key, arguments = '', data = None):
 		address = "%s/%s?%s" % (self.address, self.api[api_key], arguments)
-		print "request (%s):" % self.name, address
-		header = {KEY_AUTHORIZATION: self.get_authorization_information()}
-		request = urllib2.Request(address, data, header)
-		connection = urllib2.urlopen(request)
-		return simplejson.loads(connection.read())
+		log('Sending %s request: %s' % (self.name, address))
+		try:	
+			header = {KEY_AUTHORIZATION: self.get_authorization_information()}
+			request = urllib2.Request(address, data, header)
+			connection = urllib2.urlopen(request)
+			result = simplejson.loads(connection.read())
+			log('Loaded %d entries from %s' % (len(result), address))
+			return result
+		except:
+			log('Could not access %s' % address, LOG_WARNING)
+			return []
 		
 	def update(self, status, arguments = ''):
 		json_data = {
 			JSON_STATUS: status,
 			JSON_SOURCE: PROGRAM_NAME,
 		}
-		print "send status (%s):" % self.name, status		
+		log('Updating %s status: %s (source: %s)' % (self.name, status, PROGRAM_NAME))
 		data = urllib.urlencode(json_data)
 		return self.request(API_UPDATE, arguments, data) 
 
 	def run(self):
 		while True:
 			since_id = self.api[JSON_SINCE_ID] % self.last_id
-			messages = self.request(API_FRIENDS, since_id)
+			address = API_FRIENDS
+			log('Requesting %s resource: %s (since ID: %s)' % (self.name, address, since_id))
+			messages = self.request(address, since_id)
 			last_id = self.store(LOCAL_GET_DIR, self.name, messages, self.last_id)
 			time.sleep(self.delay)
 			self.last_id = last_id
@@ -173,24 +215,38 @@ class Service (Thread):
 def observe(handler):
 	signal.signal(signal.SIGIO, handler)
 	file = os.open(LOCAL_POST_DIR,  os.O_RDONLY)
-	mask = fcntl.DN_MODIFY | fcntl.DN_CREATE | fcntl.DN_MULTISHOT
+	mask = fcntl.DN_MODIFY | fcntl.DN_MULTISHOT
 	fcntl.fcntl(file, fcntl.F_SETSIG, 0)
 	fcntl.fcntl(file, fcntl.F_NOTIFY, mask)
-		
+
+# Start service threads.
 if __name__ == '__main__':
+	log('Loading services')
 	services = load_services(LOCAL_SERVICES_DIR)
 	
+	log('Starting services')
 	for service in services:
 		service.start()
 
-	def handle(signum, frame):	
-		print "changes occured in %s" % LOCAL_POST_DIR, signum, frame
+	def handle(signum, frame):
+		"""React to a change in the posting directory -- send updates"""	
+		#lock
+		#try:
+		log('A change occured in directory %s' % LOCAL_POST_DIR)
 		time.sleep(10)
+		log('Update services')
 		update_services(LOCAL_POST_DIR, services)
+		#unlock
+		#except:
+		#unlock
 
+	log('Update services')
 	update_services(LOCAL_POST_DIR, services)
+	
+	log('Start monitoring directories')
 	observe(handle)
 
+	# Hang up.
 	while True:
 		time.sleep(240)
 		

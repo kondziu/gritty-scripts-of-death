@@ -178,6 +178,5 @@ if __name__ == '__main__':
 			print 'arg len > 2'
 			usage()	
 	else:
-		print 'unknown com'
 		usage()
 
