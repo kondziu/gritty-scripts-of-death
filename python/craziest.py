@@ -132,7 +132,7 @@ def weigh(words, scores = SCORES):
 	return weighed_words
 
 def printout(weighed_words, show_weights = True):
-	""" Print out the list of words."""
+	"""	Print out the list of words."""
 	if show_weights:
 		for pair in weighed_words:
 			print "%-4s\t%s" % pair
