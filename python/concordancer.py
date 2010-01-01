@@ -27,7 +27,7 @@
 #
 # License:
 #
-# Copyright 2008 Konrad Siek 
+# Copyright 2009 Konrad Siek 
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
