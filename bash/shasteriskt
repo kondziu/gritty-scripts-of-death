@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# Shasteriskt
+#o
+# A quick and dirty way to generate a ton of spam to 
+# microblogging serivces. This is a script of low-grade
+# evil.
+#
+# Parameters:
+#   USERNAME:PASSWORD - credentials to services
+#   NUMBER - number of repeats
+#   WORDS - a list of words to post
+
+# Depends:
+# 	curl
+#
+# Author:
+# 	Konrad Siek	<konrad.siek@gmail.com>
+#
+# License information:
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009 Konrad Siek
+
+URLs=( \
+    'http://twitter.com/statuses/update.json' \
+    'http://identi.ca/api/statuses/update.json' \
+)
+
+if [ "$#" -lt 4 ]
+then
+    echo "Usage: $0 USER:PASSWORD NUMBER WORD [ WORD [...] ]"
+    exit 1
+fi
+
+credentials=$1; shift
+total=$1; shift
+
+words=( )
+counter=0
+while [ -n "$1" ]
+do
+    words[$counter]="$1"
+    counter=$(($counter+1))
+    shifto
+done
+
+for i in $(seq 1 $total)
+do
+    for w in "${words[@]}"
+    do
+        for url in "${URLs[@]}"
+        do
+            curl --basic \
+                --user "$credentials" \
+                --data status="$w" "$url"
+        done
+    done
+done
