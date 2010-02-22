@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+# Rotate video
+#
+# A short and handy way to rotate videos, one file at a time (sorry).
+#
+# Usage:
+# 	rotate_video [INPUT [OUTPUT [ROTATION]]]
+#
+# 	(If no arguments are given, the script will show appropriate dialogs)
+#
+# Requires:
+# 	mencoder
+# 	zenity
+#
+# Author:
+# 	Konrad Siek <konrad.siek@gmail.com>
+#
+# License information:
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009 Konrad Siek
+
+# Auxiliary shorthand for rotating:
+# 	rotate INPUT OUTPUT ROTATION
+
+function rotate() {
+	mencoder -vf rotate="$3" -o "$2" -oac copy -ovc lavc "$1"
+}
+
+CCW_90="↶90°"
+CW_90="↷90°"
+ROT_180="180°"
+
+case "$#" in
+	0) # Interactive mode
+		file=$(zenity \
+			--file-selection \
+			--title="Select a video to rotate" \
+			--separator="\n" \
+		)
+		if [ -f "$file" ]
+		then
+			output=$(basename "$file")
+			extension="${output#*.}"
+			output="$(dirname "$file")/${output%%.*}"
+			rotation=$(zenity --list \
+				--title="Specify rotation angle" \
+				--column="Rotation angle" \
+				"$CW_90" "$CCW_90" \
+			)
+			case "$rotation" in
+				"$CW_90") 
+					rotate "$file" "$output$CW_90.$extension" 1
+					exit 0
+				;;
+				"$CCW_90")
+					rotate "$file" "$output$CCW_90.$extension" 2
+					exit 0
+				;;
+				*) 
+					zenity --error --text="No rotation specified."
+					exit 3
+				;;
+			esac
+		else
+			zenity --error --text "Cannot open file '$file'."
+			exit 2
+		fi
+	;;
+	1) # Just filename
+		output=$(basename "$1")
+		extension="${output#*.}"
+		output="$(dirname "$1")/${output%%.*}"
+		rotate "$1" "$output$CW_90.$extension" 1
+	;;
+	2) # Two filenames
+ 		rotate "$1" "$2" 1
+	;;
+	3) # Two filenames and rotation spec
+		case "$3" in
+			cw) rotate "$1" "$2" 1;;
+			ccw) rotate "$1" "$2" 2;;
+			*) 
+				echo "Unknown option '$3'." >&2
+				echo "Try 'cw', 'ccw' or nothing instead." >&2
+			;;
+		esac
+	;;
+	*) # Anything else - show usage
+		echo "Usage:" >&2
+		echo -e "\t$0 [INPUT [OUTPUT [cw|ccw]]]" >&2
+		exit 1
+	;;
+esac
