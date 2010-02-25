@@ -1,0 +1,23 @@
+Source: gcraziest
+Section: python
+Priority: extra
+Build-Depends: cdbs (>= 0.4.43),
+ debhelper (>= 6),
+ python,
+ python-central (>= 0.6.11),
+ python-distutils-extra (>= 2.10)
+Maintainer: Kondziu <konrad.siek@gmail.com>
+Standards-Version: 3.8.2
+XS-Python-Version: current
+
+Package: gcraziest
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends},
+ ${python:Depends},
+ python-gconf,
+ python-gobject,
+ python-gtk2
+Description: Create words from a collection of letters.
+ Find all correct words that can be created from a collection of letters.
+ You know... for word games and stuff!

@@ -1,0 +1,16 @@
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
+Upstream-Name: gcraziest
+Upstream-Maintainer: Kondziu <konrad.siek@gmail.com>
+Upstream-Source: https://launchpad.net/gcraziest
+
+Files: *
+Copyright: (C) 2006, Daniel J. Popowich
+Copyright: (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>\n"
+Copyright: (C) 2007 Free Software Foundation, Inc. &lt;http://fsf.org/&gt;
+Copyright: (C) 2010 Konrad Siek <konrad.siek@gmail.com>
+Copyright: (C) 2010 THE PACKAGE'S COPYRIGHT HOLDER
+Copyright: (C) &lt;year&gt;  &lt;name of author&gt;
+Copyright: (C) <year>  <name of author>\n"
+License: GPL-3
+ The full text of the GPL is distributed in
+ /usr/share/common-licenses/GPL-3 on Debian systems.

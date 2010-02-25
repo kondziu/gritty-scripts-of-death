@@ -1,0 +1,282 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+### BEGIN LICENSE
+# Copyright (C) 2010 Konrad Siek <konrad.siek@gmail.com>
+#This program is free software: you can redistribute it and/or modify it 
+#under the terms of the GNU General Public License version 3, as published 
+#by the Free Software Foundation.
+#
+#This program is distributed in the hope that it will be useful, but 
+#WITHOUT ANY WARRANTY; without even the implied warranties of 
+#MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+#PURPOSE.  See the GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License along 
+#with this program.  If not, see <http://www.gnu.org/licenses/>.
+### END LICENSE
+
+VERSION='0.33'
+
+import sys
+import os
+import gtk
+import gobject
+import logging
+
+from gettext import gettext as _
+
+# Check if we are working in the source tree or from the installed 
+# package and mangle the python path accordingly
+if os.path.dirname(sys.argv[0]) != ".":
+    if sys.argv[0][0] == "/":
+        fullPath = os.path.dirname(sys.argv[0])
+    else:
+        fullPath = os.getcwd() + "/" + os.path.dirname(sys.argv[0])
+else:
+    fullPath = os.getcwd()
+    
+sys.path.insert(0, os.path.dirname(fullPath))
+
+from gcraziest import AboutGcraziestDialog, PreferencesGcraziestDialog
+from gcraziest.gcraziestconfig import getdatapath
+
+from gcraziest import craziest
+from gcraziest import dictdef
+from gcraziest.craziest import AspellDictionary
+
+from gcraziest.TreeViewTooltips import TreeViewTooltips
+
+class GcraziestWindow(gtk.Window):
+    __gtype_name__ = "GcraziestWindow"
+    properties = {}
+    definitions = {}
+
+    def __init__(self):
+        """__init__ - This function is typically not called directly.
+        Creation a GcraziestWindow requires redeading the associated ui
+        file and parsing the ui definition extrenally,
+        and then calling GcraziestWindow.finish_initializing().
+
+        Use the convenience function NewGcraziestWindow to create
+        GcraziestWindow object.
+
+        """
+        pass
+        
+    def __add_column(self, title, id, cell_renderer = gtk.CellRendererText):
+        """__add_column - add a column to the wordlist view. """
+        column = gtk.TreeViewColumn(title, cell_renderer(), text=id)
+        column.set_resizable(True)
+        column.set_sort_column_id(id)
+        self.wordview.append_column(column)
+        
+    def __set_rows(self, pairs):
+        self.wordstore.clear()
+        for score, word in pairs:
+            self.wordstore.append([score, word])
+
+    def finish_initializing(self, builder):
+        """finish_initalizing should be called after parsing the ui definition
+        and creating a GcraziestWindow object with it in order to finish
+        initializing the start of the new GcraziestWindow instance.
+
+        """
+        #get a reference to the builder and set up the signals
+        self.builder = builder
+        self.builder.connect_signals(self)
+
+        #read in preferences at start up
+        dialog = PreferencesGcraziestDialog.NewPreferencesGcraziestDialog()
+        self.properties = dialog.get_preferences()
+        logging.debug("retrieved properties (startup):")
+        for entry in self.properties.items():
+            logging.debug(entry)
+        dialog.destroy()
+
+        #create wordview columns, etc.
+        self.__add_column(_('Score'), 0)
+        self.__add_column(_('Word'), 1)
+        #self.__add_column(_('Definition'), 2, gtk.CellRendererPixbuf)
+        
+#        self.__tooltips = GTooltips()
+#        self.__tooltips.add_view(self.wordview)
+        
+    def about(self, widget, data=None):
+        """about - display the about box for gcraziest """
+        about = AboutGcraziestDialog.NewAboutGcraziestDialog(VERSION)
+        response = about.run()
+        about.destroy()
+
+    def preferences(self, widget, data=None):
+        """preferences - display the preferences window for gcraziest """
+        prefs = PreferencesGcraziestDialog.NewPreferencesGcraziestDialog()
+        response = prefs.run()
+        if response == gtk.RESPONSE_OK:
+            self.properties = prefs.get_preferences()
+            logging.debug('retrieved properties:')
+            for entry in self.properties.items():
+                logging.debug(entry)
+            self.status.set_text(_('Applied new settings.'))
+        prefs.destroy()
+
+    def quit(self, widget, data=None):
+        """quit - signal handler for closing the GcraziestWindow"""
+        self.destroy()
+        
+    def find(self, widget, data=None):
+        """find - search for letter combinations forming words """
+        # busy cursor
+        logging.debug('finding words for letters: %s' % self.letters.get_text())
+        logging.debug('using properties:')
+        for entry in self.properties.items():
+            logging.debug(entry)
+        
+        #self.status.set_text('Generating words from letters %s...' % self.letters.get_text().upper())
+        self.get_window().set_cursor(gtk.gdk.Cursor(gtk.gdk.WATCH))
+        
+        def actual_work(window):        
+            words = craziest.generate(
+                self.letters.get_text(), 
+                self.properties['dictionary'], 
+                self.properties['min_length'], 
+                self.properties['max_length'], 
+                self.properties['blank_symbol'], 
+                self.properties['scores']
+            )
+            weighed_words = craziest.weigh(words, self.properties['scores'])
+            
+            logging.debug('generated words:')
+            for word in weighed_words:
+                logging.debug(word)
+            if self.properties['show_definitions']:    
+                logging.debug('connecting to dict server:')
+                dict_host = self.properties['scores']
+                dict_port = 2628
+                dict_db = 'devils'
+                try:
+    #                self.__tooltips.definitions = dictdef.get_definitions(
+                    self.definitions = dictdef.get_definitions(
+                        self.properties['dict_host'], 
+                        self.properties['dict_port'], 
+                        self.properties['dict_database'],
+                        words
+                    )
+                except:
+                    self.definitions = {}
+    #                self.__tooltips.definitions = {}
+                    logging.debug(
+                        'Cannot connect to database %s at server %s:%s',
+                        self.properties['dict_database'],
+                        self.properties['dict_host'], 
+                        self.properties['dict_port']
+                    )
+            
+            self.__set_rows(weighed_words)        
+            # default cursor
+            window.set_cursor(None)
+            
+            self.status.set_text('Generated %s words.' % len(weighed_words))
+
+        gobject.idle_add(actual_work, self.get_window())
+        
+    def cut(self, widget, data=None):
+        clipboard = gtk.clipboard_get()
+        clipboard.set_text(self.letters.get_text())
+        self.letters.set_text('')
+        self.status.set_text(_('Cut letters to clipboard.'))
+
+    def paste(self, widget, data=None):
+        clipboard = gtk.clipboard_get()        
+        self.letters.set_text(clipboard.wait_for_text())
+        self.status.set_text(_('Pasted letters to clipboard.'))
+        
+    def copy(self, widget, data=None):
+        clipboard = gtk.clipboard_get()
+        clipboard.set_text(self.letters.get_text())
+        self.status.set_text(_('Copied letters to clipboard.'))
+        
+    def clear(self, widget, data=None):
+        self.wordstore.clear()
+        self.status.set_text(_('Cleared words.'))
+
+    def on_destroy(self, widget, data=None):
+        """on_destroy - called when the GcraziestWindow is close. """
+        #clean up code for saving application state should be added here
+
+        gtk.main_quit()
+        
+    def activate_row(self, widget, path, data=None):
+        if not self.properties['show_definitions']:
+            self.deactivate_row(self, widget)
+            return
+
+        self.definition.show()
+        word = self.wordstore[path][1]
+        if word in self.definitions:
+            self.definitiontext.get_buffer().set_text(dictdef.format(self.definitions[word]))
+        else:
+            self.definitiontext.get_buffer().set_text(_('No definition available.'))
+            
+    def deactivate_row(self, widget, data=None):
+        self.definition.hide()
+
+def NewGcraziestWindow():
+    """NewGcraziestWindow - returns a fully instantiated
+    GcraziestWindow object. Use this function rather than
+    creating a GcraziestWindow directly.
+    """
+
+    #look for the ui file that describes the ui
+    ui_filename = os.path.join(getdatapath(), 'ui', 'GcraziestWindow.ui')
+    if not os.path.exists(ui_filename):
+        ui_filename = None
+
+    builder = gtk.Builder()
+    builder.add_from_file(ui_filename)
+    
+    # grab some objects from glade
+    window = builder.get_object("gcraziest_window")
+    window.letters = builder.get_object("letters")
+    window.wordstore = builder.get_object("wordstore")
+    window.wordview = builder.get_object("wordview")
+    window.status = builder.get_object("status")
+    window.definition = builder.get_object("definition")
+    window.definitiontext = builder.get_object("definitiontext")
+    
+    window.finish_initializing(builder)
+    
+    return window
+    
+#class GTooltips (TreeViewTooltips):
+#    definitions = {}
+
+#    def __init__(self):
+#        TreeViewTooltips.__init__(self)
+
+#    def get_tooltip(self, view, column, path):
+#        word = view.get_model()[path][1]
+#        if word in self.definitions:
+#            return self.definitions[word]
+#        else:
+#            return _('<i>No definition</i>')
+#            
+#    def location(self, x, y, w, h):
+#        return x + 5, y
+
+if __name__ == "__main__":
+    #support for command line options
+    import optparse
+    parser = optparse.OptionParser(version="%s %s" % ('Gcraziest', VERSION))
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Show debug messages")
+    (options, args) = parser.parse_args()
+
+    #set the logging level to show debug messages
+    if options.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug('logging enabled')
+
+    #run the application
+    window = NewGcraziestWindow()
+    window.show()
+    gtk.main()
+

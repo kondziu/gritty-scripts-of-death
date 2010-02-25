@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Gcraziest
+Comment=Gcraziest application
+Categories=GNOME;Game;
+Exec=gcraziest
+Icon=/usr/share/gcraziest/media/icon.png
+Terminal=false
+Type=Application
