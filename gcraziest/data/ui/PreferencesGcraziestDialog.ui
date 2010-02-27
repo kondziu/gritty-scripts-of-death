@@ -44,6 +44,10 @@
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                           </object>
+                          <packing>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
+                          </packing>
                         </child>
                         <child>
                           <object class="GtkEntry" id="dictionarycommand">
@@ -55,6 +59,8 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                             <property name="x_options"></property>
                           </packing>
                         </child>
@@ -70,10 +76,6 @@
                             <property name="draw_indicator">True</property>
                             <property name="group">aspelldictionary</property>
                           </object>
-                          <packing>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
-                          </packing>
                         </child>
                         <child>
                           <object class="GtkFileChooserButton" id="dictionaryfile">
@@ -87,8 +89,6 @@
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">1</property>
-                            <property name="bottom_attach">2</property>
                             <property name="x_options"></property>
                           </packing>
                         </child>
@@ -209,8 +209,8 @@
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">&#x25CF;</property>
-                                    <signal name="activate" handler="dict_server_set"/>
                                     <signal name="focus_out_event" handler="dict_server_set"/>
+                                    <signal name="activate" handler="dict_server_set"/>
                                   </object>
                                   <packing>
                                     <property name="position">0</property>

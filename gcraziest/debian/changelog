@@ -1,11 +1,5 @@
-gcraziest (0.43~public19) karmic; urgency=low
-
-  * New release.
-
- -- Kondziu <konrad.siek@gmail.com>  Thu, 25 Feb 2010 22:05:37 +0100
-
-gcraziest (0.43~public18) karmic; urgency=low
+gcraziest (0.44) karmic; urgency=low
 
   * Initial release.
 
- -- Kondziu <konrad.siek@gmail.com>  Thu, 25 Feb 2010 22:01:34 +0100
+ -- Konrad Siek <joe@fluffball>  Sat, 27 Feb 2010 21:53:59 +0100

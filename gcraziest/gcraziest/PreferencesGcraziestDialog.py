@@ -27,6 +27,12 @@ from gcraziest import craziest
 from gcraziest.gcraziestconfig import getdatapath
 
 GCONF_GENERAL = '/apps/craziest/general'
+WORD_LISTS = [
+    '/usr/share/dict/american-english-insane',
+    '/usr/share/dict/american-english-huge',
+    '/usr/share/dict/american-english-large',
+    '/usr/share/dict/words'
+]
 
 def int_of_string(string, default = -1, if_empty = 0):
     try:
@@ -119,13 +125,19 @@ class PreferencesGcraziestDialog(gtk.Dialog):
             else:
                 return default
         gconf = self.__gconf
-                
+        
+        #use dictionary files from /usr/share/dict
+        
+        word_file = ''
+        for word_file in WORD_LISTS:
+            if os.path.isfile(word_file): break
+
         #load raw value
         min_length = load('min_length', 2, gconf.get_int)
         max_length = load('max_length', 7, gconf.get_int)
         blank_symbol = load('blank_symbol', '?', gconf.get_string)
         dict_type = load('dictionary_type', 'command', gconf.get_string)   
-        dict_file = load('dictionary_file', '', gconf.get_string)
+        dict_file = load('dictionary_file', word_file, gconf.get_string)
         command = load('dictionary_command', 'aspell --lang=en dump master', gconf.get_string)
         custom_alphabet = load('custom_alphabet', False, gconf.get_bool)
         alphabet_file = load('custom_alphabet_file', '', gconf.get_string)

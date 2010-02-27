@@ -93,7 +93,7 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
 
 DistUtilsExtra.auto.setup(
     name='gcraziest',
-    version='0.43~public19',
+    version='0.54',
     license='GPL-3',
     author='Kondziu',
     author_email='konrad.siek@gmail.com',
