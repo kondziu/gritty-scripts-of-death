@@ -1,0 +1,186 @@
+#!/bin/bash
+#
+# My shorthand for pdflatex
+#
+# Because I'm sick and tired of always putting in the same command over and 
+# over again just to compile a file into a PDF. This script does it for me.
+# It's basically the equivalent for writing:
+#   pdflatex top.tex && bibtex top && pdflatex top.tex && pdflatex top.tex and 
+# then cursing because I'd have much preferred it to halt on error but that is
+# way too much writing.
+#
+# Usage:
+# 	shorthand [OPTION ...] FILE [FILE ...]
+#	
+# 	The FILE can but doesn't have to end with the extension 'tex'. If it isn't,
+# 	one will be added before passing the file to pdflatex; if it is, it will be
+# 	removed before passing the file to bibtex.
+#
+# Options:
+# 	-n|--no-colors    Do not use colors in output. Normally, colors are used 
+# 	                  for key messages: on success, on failure, and when 
+# 	                  compilation starts.
+#	
+# 	-i|--interactive  Run pdflatex in interactive mode (halt on error).
+# 	                  Otherwise the compilation is run in non-stop mode.
+#
+# 	-q|--quiet        Do not show any output from the command whatsoever.
+# 	                  Else, compilation produces a lot of output (be advised).
+#
+# 	-c|--clean-up     Clean up after the compilation - remove aux, blg, bbl, 
+# 	                  and log files from the working directory. The files will
+# 	                  be backed up in /tmp/ec.XXX/ just in case though, and 
+# 	                  you will be asked before the actual removal of each file
+# 	                  takes place.
+#
+# 	-f|--force        When used with -c or --clean-up, the script will not ask
+# 	                  before removing each temporary file from the working 
+# 	                  directory.
+#
+# 	-h|--help         Print usage information.
+#
+# 	--latex-command   Specify a command to run instead of pdflatex. It will be
+# 	                  given some arguments that pdflatex would have been given
+# 	                  i.e., -interaction MODE and -non-stop-mode.
+#
+# 	--bibtex-command  Specify a command to run instead of bibtex.
+#
+# Example:
+# 	shorthand top.tex
+#
+# Requires:
+# 	pdflatex
+# 	bibtex
+#
+# Author:
+# 	Konrad Siek <konrad.siek@gmail.com>
+#
+# License:
+# 	Copyright 2010 Konrad Siek
+#
+# 	This program is free software: you can redistribute it and/or modify it 
+# 	under the terms of the GNU General Public License as published by the Free 
+# 	Software Foundation, either version 3 of the License, or (at your option) 
+# 	any later version. See 	<http://www.gnu.org/licenses/> for details.
+#
+
+texcommand=pdflatex		# name or path to command
+bibcommand=bibtex		# name or path to command
+quiet=$false			# true or $false
+interactive=$false		# true or $false
+colors=true				# true or $false
+cleanup=$false			# true or $false
+force=$false			# true or $false
+
+# Print usage information.
+usage () {
+	gawk '/^#/ && NR>1 {sub(/^#[ \t]?/,""); print; next} NR>1 {exit}' "$0"
+}
+
+# Print stuff to standard error.
+stderr() {
+	echo $@ &> 2
+}
+
+# Parse options.
+options=$(\
+	getopt \
+	-o ciqnhf \
+	--long clean-up,interactive,quiet,latex-command:,bibtex-command:,no-colors,force,help \
+	-n $0 -- "$@" \
+)
+
+# Stop if there's some sort of problem.
+if [ $? != 0 ] 
+then
+	[ $quiet ] && syserr "Argh! Parsing went pear-shaped!"
+	exit 1
+fi
+
+# Set the parsed command options and work with the settings.
+eval set -- "$options"
+while true 
+do
+	case "$1" in
+	--latex-command) texcommand="$2"; shift 2;;
+	--bibtex-command) bibcommand="$2"; shift 2;;
+	-c|--clean-up) cleanup=true; shift;;
+	-n|--no-colors) colors=$false; shift;;
+	-f|--force) force=true; shift;;
+	-i|--interactive) interactive=true; shift;;
+	-q|--quiet)	quiet=true; shift;;
+	-h|--help) usage; exit 1;;
+	--)	shift; break;;
+	*) syserr "Ack! She cannae take it anymore, captain!"; exit 3;;
+	esac
+done
+
+# Various messages printed out by the script.
+SUCCESS="Huzzah!"
+FAIL="Your shipment of fail has arrived."
+PROCESSING="Processing file <{}>"
+
+# If no params given, print usage and quit with an error.
+[ $# -lt '1' ] && (usage; exit 1)
+
+# Specify the params for pdflatex for whatever level of interactiveness the 
+# user expects. We do this beforehand.
+if [ $interactive ]
+then
+	iparams="-interaction errorstopmode -halt-on-error"
+else
+	iparams="-interaction nonstopmode"
+fi
+
+clean_up () {
+	if [ $cleanup ]
+	then
+		dir=`mktemp --tmpdir -d "$1.XXX"` && for ext in bbl blg log aux
+		do
+			f="$1.$ext"; cp -v "$f" "$dir/$f"
+			[ $force ] && rm -vf "$f" || rm -vi "$f" 
+		done
+		cp -v "$1.tex" "$dir/"
+	fi
+}
+
+# If the user wants colors, the messages can be prepared beforehand.
+if [ $colors ]
+then
+	# Add coloring control characters to the message strings:
+	# success, green; fail, red; processing, white; all bold.
+	SUCCESS="\033[32m\033[1m$SUCCESS\033[m"
+	FAIL="\033[31m\033[1m$FAIL\033[m"
+	PROCESSING="\033[37m\033[1m$PROCESSING\033[m"
+fi
+
+# The shorthand method for the pdflatex/bibtex combination.
+shorthand () {
+	# Cut off the extension, if any to create the bibtex argument,
+	dir=`dirname "$1"`
+	base=`basename "$1" .tex`
+	stump="$dir/$base"
+
+	# And now stick the extension back on to create the pdflatex argument.
+	full="$stump.tex"
+
+	# Print out what file is being processed.
+	echo -e ${PROCESSING//\{\}/$full} 
+
+	# The pipe, where all the magic happens:
+	$texcommand $iparams "$full" && \
+	$bibcommand "$stump" && \
+	$texcommand $iparams "$full" && \
+	$texcommand $iparams "$full" && \
+	(clean_up "$base"; echo -e $SUCCESS) || echo -e $FAIL
+
+	# Finally print out an information whether the processing was a success or
+	# a failure.
+}
+
+# Do the thing.
+for arg
+do
+	# If quiet mode is on, send all results to the black hole.
+	[ $quiet ] && shorthand "$arg" 1> /dev/null 2>/dev/null || shorthand "$arg"
+done
