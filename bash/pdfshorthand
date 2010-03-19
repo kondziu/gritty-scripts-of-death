@@ -21,6 +21,8 @@
 # 	                  for key messages: on success, on failure, and when 
 # 	                  compilation starts.
 #	
+# 	-b|--no-biblio    Do not attempt to generate a bibliography using bibtex.
+#
 # 	-i|--interactive  Run pdflatex in interactive mode (halt on error).
 # 	                  Otherwise the compilation is run in non-stop mode.
 #
@@ -71,6 +73,7 @@ interactive=$false		# true or $false
 colors=true				# true or $false
 cleanup=$false			# true or $false
 force=$false			# true or $false
+no_biblio=$false		# true or $false
 
 # Print usage information.
 usage () {
@@ -85,8 +88,8 @@ stderr() {
 # Parse options.
 options=$(\
 	getopt \
-	-o ciqnhf \
-	--long clean-up,interactive,quiet,latex-command:,bibtex-command:,no-colors,force,help \
+	-o ciqnhfb \
+	--long clean-up,interactive,quiet,latex-command:,bibtex-command:,no-colors,force,help,no-biblio \
 	-n $0 -- "$@" \
 )
 
@@ -110,6 +113,7 @@ do
 	-i|--interactive) interactive=true; shift;;
 	-q|--quiet)	quiet=true; shift;;
 	-h|--help) usage; exit 1;;
+	-b|--no-biblio) no_biblio=true; shift;;
 	--)	shift; break;;
 	*) syserr "Ack! She cannae take it anymore, captain!"; exit 3;;
 	esac
@@ -135,7 +139,7 @@ fi
 clean_up () {
 	if [ $cleanup ]
 	then
-		dir=`mktemp --tmpdir -d "$1.XXX"` && for ext in bbl blg log aux
+		dir=`mktemp --tmpdir -d "$1.XXX"` && for ext in bbl blg log aux out
 		do
 			f="$1.$ext"; cp -v "$f" "$dir/$f"
 			[ $force ] && rm -vf "$f" || rm -vi "$f" 
@@ -152,6 +156,14 @@ then
 	SUCCESS="\033[32m\033[1m$SUCCESS\033[m"
 	FAIL="\033[31m\033[1m$FAIL\033[m"
 	PROCESSING="\033[37m\033[1m$PROCESSING\033[m"
+fi
+
+# If bibtex is not supposed to be run at all, run the 'true' command instead.
+# The 'true' command will take whatever parameters and do absolutely nothing,
+# then it'll report a success. So it fits perfectly with the other commands.
+if [ $no_biblio ]
+then
+	bibcommand=true
 fi
 
 # The shorthand method for the pdflatex/bibtex combination.
