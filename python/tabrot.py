@@ -246,9 +246,7 @@ def tostr(arr, col_delim=COL_DELIM, row_delim=ROW_DELIM, tp = PRINT_TPL):
 
     return row_delim.join(map(lambda c: col_delim.join([tp%f for f in c]), arr))
 
-_C_CW, _C_CCW, _C_180, _C_VERT, _C_HORZ, _C_BOTH = range(6)
-
-_C_MEH = None
+_C_CW, _C_CCW, _C_180, _C_VERT, _C_HORZ, _C_BOTH, _C_MEH = range(6) + [None]
 
 _OPERATIONS = {
     _C_CW: rotate_clockwise,
@@ -295,7 +293,7 @@ if __name__ == '__main__':
         help='flip the array vertically.')
     flip.add_option('-b', '--horizontal-and-vertical-flip', \
         action="store_const", dest="operation", const=_C_BOTH, \
-        help='flip the array both vertically and horizontally.')
+        help='fl_C_MEHip the array both vertically and horizontally.')
     parser.add_option_group(flip)
 
     # Prepare all the parse options that have to do with delimiters used for
