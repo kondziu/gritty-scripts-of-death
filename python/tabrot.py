@@ -246,12 +246,8 @@ def tostr(arr, col_delim=COL_DELIM, row_delim=ROW_DELIM, tp = PRINT_TPL):
 
     return row_delim.join(map(lambda c: col_delim.join([tp%f for f in c]), arr))
 
-_C_CW = 0
-_C_CCW = 1
-_C_180 = 2
-_C_VERT = 3
-_C_HORZ = 4
-_C_BOTH = 5
+_C_CW, _C_CCW, _C_180, _C_VERT, _C_HORZ, _C_BOTH = range(6)
+
 _C_MEH = None
 
 _OPERATIONS = {
