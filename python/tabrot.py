@@ -70,132 +70,132 @@ PRINT_TPL = '%s'
 def rotate_clockwise(array, empty=EMPTY_SYM):
     """ Rotate a 2D array clockwise (rightward) returning a copy of the array.
     By a 2D array I mean a list containing lists containing strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
     
     If the array is ragged (contains rows of different lengths), then it will
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _cw_coord_trans, empty=empty)
 
 def rotate_counterclockwise(array, empty=EMPTY_SYM):
     """ Rotate a 2D array counter-clockwise (leftward) returning a copy of the
      array. By a 2D array I mean a list containing lists containing strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
-    
+
     If the array is ragged (contains rows of different lengths), then it will
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _ccw_coord_trans, empty=empty)
 
 def rotate_180_degrees(array, empty=EMPTY_SYM):
     """ Rotate a 2D array upside-down (180° as the name implies) returning a
     copy of the array. By a 2D array I mean a list containing lists containing
     strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
-    
+
     If the array is ragged (contains rows of different lengths), then it will 
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _180_coord_trans, swap=False, empty=empty)
 
 def flip_horizontal(array, empty=EMPTY_SYM):
     """ Flip a 2D array horizontally (left-to-right) returning a copy of the 
     array. By a 2D array I mean a list containing lists containing strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
-    
+
     If the array is ragged (contains rows of different lengths), then it will 
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _flip_horz_trans, swap=False, empty=empty)
 
 def flip_vertical(array, empty=EMPTY_SYM):
     """ Flip a 2D array vertically (upside-down) returning a copy of the
     array. By a 2D array I mean a list containing lists containing strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
-    
+
     If the array is ragged (contains rows of different lengths), then it will
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _flip_vert_trans, swap=False, empty=empty)
 
 def flip_horizontal_and_vertical(array, empty=EMPTY_SYM):
     """ Flip a 2D array vertically and horizontally (both upside-down and
     left-to-right) returning a copy of the array. By a 2D array I mean a list
     containing lists containing strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
-    
+
     If the array is ragged (contains rows of different lengths), then it will 
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _flip_both_trans, swap=False, empty=empty)
 
 def rotate_not_at_all(array, empty=EMPTY_SYM):
     """ Rotate a 2D array 0° returning a copy of the array. That is to say, 
     do not rotate the array at all, but apply all the delimiter splitting and 
     conversions that would've been applied had the array been rotated. 
-    
+
     By a 2D array I mean a list containing lists containing strings.
-    
+
     If an empty element occurs (a string of length 0), then it gets replaced
     with blanks - whatever is provided through the parameter 'empty'.
-    
+
     If the array is ragged (contains rows of different lengths), then it will 
     be filled out with blanks during the transformation.
-    
+
     Note that the original array is left intact."""
-    
+
     return transpose(array, _meh_coord_trans, swap=False, empty=empty)
 
 def transpose(arr, coord_trans, swap=True, empty=EMPTY_SYM):
     """ Perform a specific transformation on the given array returning a new
     version of the array.
-    
+
     The general functioning can be roughly (and cryptically) described as:
         (i', j') ← coord_trans(i, j, n, m)       i = 1...n, j = 1...m
         ∀i,∀j new_array[i'][j'] ← old_array[i][j]
-        
+
     That is, the coordinates of each elements in the old array are translated
     in the coordinates the elemnt should be in in the new array, and when those
     are ready, the element is pasted there.
-    
+
     The parameter coord_trans specifies a function that translates indexes of 
     the old array to the indexes of the new array, and it is of type:
          int->int->int->int->(int, int)         
-         
+
     This means it takes 4 integers as arguments and returns a two-integer 
     tupple.The parameters are: 
         * i - a row index of the old array (1st dimension)
         * j - a column index of the old array (2nd dimension)
         * n - the number of rows 
         * m - the number of columns (the maximum number of columns, if ragged)
-        
+
     An example of a coord_trans function (that rotates the array clockwise) is:
         coord_trans = lambda i, j, n, m: (j, n - 1 - i)
-        
+
     The parameter swap indicates whether the array will be put on one of its 
     sides or if it will be put on its top or bottom. True indicates that the
     array will be on the side after the transformation (rows become columns and
@@ -203,11 +203,11 @@ def transpose(arr, coord_trans, swap=True, empty=EMPTY_SYM):
     of i). False indicates that the array will be either as it was or 
     upside-down or similar (columns remain columns, etc; in other words, i' 
     will be a function of i, and j' a function of j).
-    
+
     The parameter empty is a string which will be used if the cell with a given
     index does not exist in the original array (e.g. because it was ragged) or
     instead of any cell that holds an empty string (string of length 0)."""
-    
+
     isize = len(arr)
     jsize = reduce(max, map(len, arr))
     trans_f = lambda n, m: [[empty for c in range(m) ] for r in range(n)]
@@ -238,12 +238,12 @@ def parse(text, col_delim=COL_DELIM, row_delim=ROW_DELIM):
 def tostr(arr, col_delim=COL_DELIM, row_delim=ROW_DELIM, tp = PRINT_TPL):
     """ Create a string representation of a given 2D array using the specified
     delimiters to separate rows and columns.
-    
+
     A template may be specified accoring to python string formating utilities 
     for all the cells to use. For instance, using tp='"%20s"' will create an 
     output string where each cell uses a minimum of 20 characters and is 
     surrounded by double quotes."""
-    
+
     return row_delim.join(map(lambda c: col_delim.join([tp%f for f in c]), arr))
 
 _C_CW = 0
