@@ -37,6 +37,13 @@
 #                           specify a field (column) delimiter instead of ",".
 #       -D DELIM, --row-delimiter=DELIM
 #                           specify a row delimiter instead of " ".
+#       -o DELIM, --output-field-delimiter=DELIM
+#                           specify an output field delimiter instead of ",".
+#	    -O DELIM, --output-row-delimiter=DELIM
+#	                        specify an output row delimiter instead of " ".
+#	    -S, --output-delimiters-same
+#	                        specify output delimiters as the same as input
+#	                        delimiters.
 #   Printing:
 #       -s TEMPLATE, --print-template=TEMPLATE
 #                           set a sprintf-like template for cells, default: "%s"
@@ -64,6 +71,8 @@
 # specified via arguments.
 COL_DELIM = ','
 ROW_DELIM = '\n'
+O_COL_DELIM = ','
+O_ROW_DELIM = '\n'
 EMPTY_SYM = ' '
 PRINT_TPL = '%s'
 
@@ -270,30 +279,30 @@ if __name__ == '__main__':
     # Prepare all the parse options that have to do with rotating the array.
     rotate = OptionGroup(parser, "Rotating")
     rotate.add_option('-c', '--clockwise', \
-        action="store_const", dest="operation", const=_C_CW, \
+        action="append_const", dest="operations", const=_C_CW, \
         help='rotate the array clockwise (right).')
     rotate.add_option('-C', '--counter-clockwise', \
-        action="store_const", dest="operation", const=_C_CCW, \
+        action="append_const", dest="operations", const=_C_CCW, \
         help='rotate the array counter-clockwise (left).')
     rotate.add_option('-r', '--rotate-180', \
-        action="store_const", dest="operation", const=_C_180, \
+        action="append_const", dest="operations", const=_C_180, \
         help=u'rotate the array 180° - make it upside-down.')
     rotate.add_option('-m', '--meh', '--do-nothing', \
-        action="store_const", dest="operation", const=_C_MEH, \
+        action="append_const", dest="operations", const=_C_MEH, \
         help=u'rotate the array 0° - not at all.')
     parser.add_option_group(rotate)
 
     # Prepare all the parse options that have to do with flipping the array.
     flip = OptionGroup(parser, "Flipping (mirroring)")
     flip.add_option('-f', '--horizontal-flip', \
-        action="store_const", dest="operation", const=_C_HORZ, \
+        action="append_const", dest="operations", const=_C_HORZ, \
         help='flip the array horizontally.')
     flip.add_option('-v', '--vertical-flip', \
-        action="store_const", dest="operation", const=_C_VERT, \
+        action="append_const", dest="operations", const=_C_VERT, \
         help='flip the array vertically.')
     flip.add_option('-b', '--horizontal-and-vertical-flip', \
-        action="store_const", dest="operation", const=_C_BOTH, \
-        help='fl_C_MEHip the array both vertically and horizontally.')
+        action="append_const", dest="operations", const=_C_BOTH, \
+        help='flip the array both vertically and horizontally.')
     parser.add_option_group(flip)
 
     # Prepare all the parse options that have to do with delimiters used for
@@ -305,6 +314,15 @@ if __name__ == '__main__':
     delims.add_option('-D', '--row-delimiter', \
         metavar='DELIM', dest="row_delim", default=ROW_DELIM, \
         help='specify a row delimiter instead of "%s".' % ROW_DELIM)
+    delims.add_option('-o', '--output-field-delimiter', \
+        metavar='DELIM', dest="out_col_delim", default=O_COL_DELIM, \
+        help='specify an output field delimiter instead of "%s".' % O_COL_DELIM)
+    delims.add_option('-O', '--output-row-delimiter', \
+        metavar='DELIM', dest="out_row_delim", default=O_ROW_DELIM, \
+        help='specify an output row delimiter instead of "%s".' % O_ROW_DELIM)
+    delims.add_option('-S', '--output-delimiters-same', \
+        dest="same_delims", default=False, action="store_true", \
+        help='specify output delimiters as the same as input delimiters.')
     parser.add_option_group(delims)
 
     # Assorted options, that have something vaguely to do with printing.
@@ -331,8 +349,14 @@ if __name__ == '__main__':
     # Convert the string into an array, apply a transformation and the convert
     # the new array back into a string.
     arr = parse(input, opts.col_delim, opts.row_delim)
-    arr = _OPERATIONS[opts.operation](arr, opts.empty_sym)
-    str = tostr(arr, opts.col_delim, opts.row_delim, opts.print_tpl)
+    if opts.same_delims:
+        opts.out_row_delim = opts.row_delim
+        opts.out_col_delim = opts.col_delim
+    if not opts.operations:
+        opts.operations = [None]
+    for operation in opts.operations:
+        arr = _OPERATIONS[operation](arr, opts.empty_sym)
+    str = tostr(arr, opts.out_col_delim, opts.out_row_delim, opts.print_tpl)
 
     # Write out the new array to standard output, possibly adding an extra line
     # at the end so it doesn't get glued to $PS1 (I hate when that happens).
