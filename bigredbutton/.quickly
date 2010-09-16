@@ -1,0 +1,4 @@
+project = bigredbutton
+template = ubuntu-application
+version = 0.4.3
+lp_id = bigredbutton

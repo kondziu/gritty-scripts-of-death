@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Big Red Button
+Comment=A big button for turning a device connected to the printer port on or off.
+Categories=GNOME;Utility;
+Exec=bigredbutton
+Icon=/usr/share/bigredbutton/media/icon.png
+Terminal=false
+Type=Application

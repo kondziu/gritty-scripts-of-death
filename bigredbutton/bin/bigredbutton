@@ -1,0 +1,142 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+### BEGIN LICENSE
+# Copyright (C) 2010 Konrad Siek <konrad.siek@gmail.com>
+# This program is free software: you can redistribute it and/or modify it 
+# under the terms of the GNU General Public License version 3, as published 
+# by the Free Software Foundation.
+# 
+# This program is distributed in the hope that it will be useful, but 
+# WITHOUT ANY WARRANTY; without even the implied warranties of 
+# MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+# PURPOSE.  See the GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along 
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+### END LICENSE
+
+import sys, os
+from gettext import gettext as _
+
+#gettext.textdomain('bigredbutton') XXX remove
+
+def getfullpath():
+    from os import path
+    from os import getcwd
+    from sys import argv
+
+    filepath = argv[0]
+    dirname = path.dirname(filepath)
+    if dirname != '.':
+        if path.isabs(filepath):
+            return dirname
+        else:
+            return path.join(getcwd(), dirname)
+    else:
+        return getcwd()
+
+# Check if we are working in the source tree or from the installed 
+# package and mangle the python path accordingly
+sys.path.insert(0, os.path.dirname(getfullpath()))
+
+if __name__ == "__main__":
+    from optparse import OptionParser, OptionGroup
+    from sys import argv
+    from os.path import basename
+
+    name = basename(argv[0])
+    usage = ('\n' + 7 * ' ').join([
+        _('%s [OPTIONS]' + 13 * ' ' + ' - open in interactive mode'), 
+        _('%s [OPTIONS] on|off [...] - send a sequence to port')]) % (name, name)
+
+    info = _("A big red button that sends a 0x0 or a 0xFF to the parallel " + \
+        "port, so you can use it to turn some kind of device on and off. " + \
+        "In addition, it can be used as a commandline tool, either " + \
+        "interactively or by executing a prepared sequence of values.")
+
+    modules = _("Since using the parallel port is the point of this tool, " + \
+        "it has to be prepared for it:\n [1] The lp(4) module must be " + \
+        "unloaded, rmmod lp. lp claims exclusive access to the port and " + \
+        "other programs won't be able to use it.\n [2] The ppdev(4) module " + \
+        "needs to be loaded, modprobe ppdev. When udev is in use, (default " + \
+        "with 2.6 kernels) this will create a /dev/parport0.\n[3] The user " + \
+        "needs to have write permissions to /dev/parport0. Many " + \
+        "distributions have an lp group that owns the device; the simplest " + \
+        "is to add the user account to this group. Simply changing " + \
+        "permissions on the device is not the best strategy as they will " + \
+        "be reverted to their defaults next time the driver is loaded. " + \
+        "From: http://pyserial.sourceforge.net/pyparallel.html")
+
+    parser = OptionParser(usage=usage, description=info, epilog=modules)
+
+    paropts = OptionGroup(parser, _('Parallel port'))
+    paropts.add_option('-s', '--stdout', action='store_true', dest='stdout', \
+        help=_('send to standard output instead of an actual parallel port'))
+    paropts.add_option('-p', '--port', action='store', dest='port', \
+        help=_('send to specified port instead of the default: /dev/parport0'), \
+        default='/dev/parport0')
+    paropts.add_option('-1', '--on-value', action='store', dest='on_value', \
+        help=_('specify a value to send when switching on (default: 0xff)'), \
+        default=0xff, type='int')
+    paropts.add_option('-0', '--off-value', action='store', dest='off_value', \
+        help=_('specify a value to send when switching off (default: 0x00)'), \
+        default=0, type='int')
+    paropts.add_option('-d', '--sequence-delay', action='store', dest='delay', \
+        help=_('set a delay between actions in a sequece (default: 500ms)'), \
+        default=500, type='int')
+    parser.add_option_group(paropts)
+
+    display = OptionGroup(parser, _('Display options'))
+    display.add_option('--nox', action='store_false', dest='gui', \
+        help=_('do not show Graphical User Interface; interact on command line'), \
+        default=True)
+    display.add_option('-v', '--verbose', action='store_true', dest='verbose', \
+        help=_('display diagnostic messages about the operation of the program'))
+    parser.add_option_group(display)
+
+    opts, args = parser.parse_args()
+
+    # Select and initialize the appropriate parallel port.
+    if opts.stdout:
+        from bigredbutton.dummy import StdoutParallel
+        parallelport = StdoutParallel()
+    else:
+        from parallel import Parallel
+        try:
+            parallelport = Parallel(opts.port)
+        except OSError:
+            from sys import stderr
+            from bigredbutton.dummy import StdoutParallel
+            parallelport = StdoutParallel()
+            errormessage = _('Parallel port %s is unavailable.') % opts.port
+            stderr.write(errormessage + '\n')
+            if opts.gui:
+                import gtk
+                pass #TODO error dialog
+                errd = gtk.MessageDialog(None, gtk.DIALOG_DESTROY_WITH_PARENT, \
+                    gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, errormessage)
+                errd.run()
+                errd.destroy()
+
+    if len(args) == 0:
+        # Open interactive mode.
+        if opts.gui:
+            # Start up the GUI client.
+            from bigredbutton.bigredbuttongui import NewBigredbuttonWindow
+            import gtk
+            # Initiate threads.
+            gtk.gdk.threads_init()
+            NewBigredbuttonWindow(parallelport, verbose=opts.verbose, \
+                on=opts.on_value, off=opts.off_value).show()
+            gtk.main()  
+        else: 
+            # Start up the commandline interactive interface.
+            from bigredbutton.nox import console
+            console(parallelport, verbose=opts.verbose, on=opts.on_value, \
+                off=opts.off_value)
+    else:
+        # Send a sequence to port.
+        from bigredbutton.nox import sequence
+        sequence(parallelport, args, verbose=opts.verbose, on=opts.on_value, \
+             off=opts.off_value, delay=opts.delay)
+

@@ -1,0 +1,25 @@
+Source: bigredbutton
+Section: python
+Priority: extra
+Build-Depends: cdbs (>= 0.4.43),
+ debhelper (>= 6),
+ python,
+ python-support (>= 0.6.4),
+ python-distutils-extra (>= 2.10)
+Maintainer: Konrad Siek <konrad.siek@gmail.com>
+Standards-Version: 3.8.2
+XS-Python-Version: current
+
+Package: bigredbutton
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends},
+ ${python:Depends},
+ python-gobject,
+ python-parallel,
+ python-gtk2,
+ python-desktopcouch-records
+Description: A big red button that sends signals to the parallel port.
+ A big red button that sends a 0x0 or a 0xFF to the parallel port, so you
+ can use it to turn some kind of device on and off. Also includes some
+ commandline tools for doing same.
