@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Duplicates
 #
@@ -29,6 +30,15 @@
 #                         match
 #   --non-recursive       Only look through the files in the directory but do
 #                         not descend into subdirectories.
+#   -e EXCLUDES, --exclude=EXCLUDES
+#                         Do not search through the files described by this
+#                         path.
+#   -r REGEXPS, --exclude-regexp=REGEXPS
+#                         Do not search through the files whose paths fit this
+#                         regular expression. (Details on regular expressions:
+#                         http://docs.python.org/library/re.html)
+#   -s, --stdin           Read list of paths from standard input (arguments are
+#                         ignored)
 #
 # Example:
 #   This is how you go about checking if Steve has any duplicated files in his
@@ -51,7 +61,7 @@
 #   with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os, sys
+import os, sys, re
 
 # Levels of verbocity:
 #   * results - print out the final results formatted as specified by the user,
@@ -75,20 +85,36 @@ def printerr(level, *args):
         stderr.write(" %s" % arg)
     stderr.write("\n")
     
-def listall(root, recursive=True):
+def listall(root, recursive=True, excludes=[]):
     """ Traverse a file tree and list all files therein."""
     from os import listdir
     from os.path import isdir, abspath, exists, join
+    dir_filter = lambda f: not isdir(f)
     files = []
     todo = [abspath(root)]
     while todo:
         path = todo.pop()
-        printerr(SHOW_ALL, 'Found file:', "'%s'" % path)
-        if not isdir(path):
-            files.append(path)
+        # Check if the file is in the excludion list, and if so, do not 
+        # process it further.
+        if matches(excludes, path):
+            printerr(SHOW_ALL, 'Path excluded from comparisons', "'%s'" % path)
             continue
-        contents = [join(path, file) for file in listdir(path)]
-        todo += contents if recursive else filter(lambda f: not isdir(f), contents)
+        # In case any errors occur just print the message but do not stop 
+        # working: results will be less exact, but at least there will be some.
+        try:
+            printerr(SHOW_ALL, 'Found file:', "'%s'" % path)
+            # Ordinary files go onto the file list and will be checked for 
+            # duplicates. 
+            if not isdir(path):
+                files.append(path)
+                continue
+            # Directories are listed and their contents are put back onto the
+            # todo list, while they themselves will not be checked for 
+            # duplicates.
+            contents = [join(path, file) for file in listdir(path)]
+            todo += contents if recursive else filter(dir_filter, contents) 
+        except Exception as exception:
+            printerr(SHOW_ERRORS, exception)
     return files
 
 def same_file(data_a, data_b):
@@ -102,7 +128,26 @@ def same_file(data_a, data_b):
             return False
     return True
 
-def duplicates(paths, onlyhashes=False):
+def matches(excludes, path):
+    """ Check if the given path is in the exclusion list, which consists of 
+    strings and compiled regular expressions."""
+    for expression in excludes:
+        if type(expression) == str:
+            if path == expression:
+                return True
+        else:
+            if expression.match(path):
+                return True
+    return False
+
+def read_data(path):
+    """ Read contents of a given file and close the stream."""
+    data_source = open(path, 'rb')
+    data = data_source.read()
+    data_source.close()  
+    return data
+
+def duplicates(paths, onlyhashes=False, excludes=[]):
     """ For each file in a list of files find its duplicates in that list. A 
     duplicate of file is such that has the same contents. The files are compared
     first by hashes of its contents and if those match, bit by bit (although the
@@ -112,35 +157,37 @@ def duplicates(paths, onlyhashes=False):
     duplicates = []
     for path in paths:
         printerr(SHOW_ALL, 'Looking for duplicates for', "'%s'" % path)
-        data = open(path, 'rb').read()
-        hash = md5(data).digest()
-        if hash in hashes:
-            other_paths = hashes[hash]
-            printerr(SHOW_HASH, 'Hash of ', "'%s'" % path, \
-                'matches has of ', "'%s'" % other_paths)
-            duplicated = False
-            for other_path in other_paths:
-                # If only hashes are supposed to be taken into account, then
-                # assume this file is a duplicate and do not process further.
-                if onlyhashes:
-                    duplicates.append((other_path, path))
-                    duplicated = True
-                    break
-                other_data = open(other_path, 'rb').read()
-                # Check if files are different despite having the same hash.
-                if same_file(data, other_data):
-                    printerr(SHOW_DUPLICATE, 'Found duplicates: \
-                        '"'%s'" % path, 'and', "'%s'" % other_path)
-                    duplicates.append((other_path, path))
-                    duplicated = True
-            if not duplicated:
-                # Same hash but different content.
-                printerr(SHOW_HASH, 'No duplicate found for', "'%s'" % path)
-                hashes[hash].append(path)
-        else:
-            # No matching hash.
-            printerr(SHOW_ALL, 'No duplicate found for', "'%s'" % path)
-            hashes[hash] = [path]
+        try:
+            data = read_data(path)           
+            hash = md5(data).digest()
+            if hash in hashes:
+                other_paths = hashes[hash]
+                duplicated = False
+                for other_path in other_paths:
+                    # If only hashes are supposed to be taken into account, 
+                    # then assume this file is a duplicate and do not process 
+                    # further.
+                    if onlyhashes:
+                        duplicates.append((other_path, path))
+                        duplicated = True
+                        break
+                    other_data = read_data(other_path)
+                    # Check if files are different despite having the same hash.
+                    if same_file(data, other_data):
+                        printerr(SHOW_DUPLICATE, 'Found duplicates:', \
+                            "'%s'" % path, 'and', "'%s'" % other_path)
+                        duplicates.append((other_path, path))
+                        duplicated = True
+                if not duplicated:
+                    # Same hash but different content.
+                    printerr(SHOW_HASH, 'No duplicate found for', "'%s'" % path)
+                    hashes[hash].append(path)
+            else:
+                # No matching hash.
+                printerr(SHOW_ALL, 'No duplicate found for', "'%s'" % path)
+                hashes[hash] = [path]
+        except Exception as exception:
+            printerr(SHOW_ERRORS, exception)
     return duplicates
 
 def sort(duplicates):
@@ -207,28 +254,57 @@ if __name__ == '__main__':
     parser.add_option('--hash-only', action='store_true', dest='hashonly', \
         help='Do not compare duplicate files bit-by-bit if hashes match', \
         default=False)
-    parser.add_option('--non-recursive', action='store_false', dest='recursive', \
+    parser.add_option('--non-recursive', action='store_false', \
         help='Only look through the files in the directory but do not ' + \
-        'descend into subdirectories.', default=True)
+        'descend into subdirectories.', default=True, dest='recursive')
+    parser.add_option('-e', '--exclude', action='append', dest='excludes', \
+        help='Do not search through the files described by this path.', \
+        default=[])
+    parser.add_option('-r', '--exclude-regexp', action='append', \
+        dest='regexps', help='Do not search through the files whose paths ' + \
+        'fit this regular expression. (Details on regular expressions: ' + \
+        'http://docs.python.org/library/re.html)', default=[])
+    parser.add_option('-s', '--stdin', action='store_true', dest='stdin', \
+        help='Read list of paths from standard input (arguments are ignored)', \
+        default=False)
 
-    # Gathering option information
+    # Gathering option information.
     opts, args = parser.parse_args()
     if opts.paragraphs:
         opts.field = '\n'
         opts.group = '\n\n'
     verbosity = opts.verbosity
 
-    if len(argv) == 1: 
-        parser.print_help()
-        sys.exit(1)
+    # Compiling excluding regular expressions.
+    for regexp in opts.regexps:
+        matcher = re.compile(regexp)
+        opts.excludes.append(matcher)
+
+    files = []
+    if opts.stdin:
+        # User provides paths by standard input, script ignores arguments.
+        from sys import stdin
+        from os.path import exists, abspath
+        printerr(SHOW_ALL, 'Reading file paths from standard input')
+        for line in stdin.readlines():
+            line = line[:-1] # get rid of the trailing new line
+            if exists(line):
+                files.append(abspath(line))
+                continue
+            elif line == '':
+                continue
+            printerr(SHOW_ERRORS, 'File not found', "'%s'," % line, 'skipping')
+    else:
+        # Get file paths by parsing all arguments' file subtrees.
+        if not args: 
+            parser.print_help()
+            sys.exit(1)
+        for arg in args:
+            printerr(SHOW_ALL, 'Reading file tree under %s%s' \
+                % (arg, 'recursively' if opts.recursive else ''))
+            files += listall(arg, opts.recursive, opts.excludes)
 
     # Processing.
-    files = []
-    for arg in args:
-        printerr(SHOW_ALL, 'Reading file tree under %s%s' \
-            % (arg, 'recursively' if opts.recursive else ''))
-        files += listall(arg, opts.recursive)
     sorts = sort(duplicates(files, opts.hashonly))
     print_results(sorts, separator=opts.field, group_separator=opts.group)
-
 
