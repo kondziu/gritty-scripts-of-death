@@ -1,0 +1,185 @@
+#!/bin/bash
+#
+# uptimed (uptime daemon)
+#
+# Checks uptime and some acpi settings from time to time and logs 
+# that information in a specified file. It's designed to be run often.
+#
+# Parameters:
+#   -t | --sleep-time   time between checks (default: 6 minutes)
+#   -s | --stdout       write info to stdout as well as the file
+#   -f | --file         write to a log file with a name like this one 
+#   -e | --extension    specify an extensionto the log file
+#   -u | --no-uptime    DON'T log current uptime
+#   -b | --no-battery   DON'T log batery charge
+#   -d | --no-thermal   DON'T log current temperature
+#   -a | --all          log uptime, battery and thermal (default)
+#   -c | --comment      append a comment to each line (default: empty)
+#   -p | --prefix       prepend a comment to each line (default: empty)
+# 
+# Requires:
+#   uptime
+#   acpi
+#   tee
+#
+# Author:
+#   Konrad Siek <konrad.siek@gmail.com>
+#
+# License information:
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright 2009 Konrad Siek
+
+# Presets
+sleep_time=360                    
+echo_stdin=false #true
+filename=/var/log/uptimed/uptime
+extension=`date +%Y%m%d`
+uptime_on=true
+battery_on=true
+thermal_on=true
+comment=""
+
+# Retrieve program parameters
+options=$( \
+getopt -o t:s::f:e:ubdac:p: \
+--long sleep-time:,stdout::,file:,extension:,\
+no-uptime,no-battery,no-thermal,all,comment:,prefix \
+-n $0 -- "$@" \
+)
+
+# Check if getopts worked as it should
+[ $? != 0 ] &&
+    exit 1
+
+# Iterate over parameters and set up the program
+eval set -- "$options"
+while true
+do
+    case "$1" in
+        -t|--sleep-time)
+            sleep_time=$2
+            shift 2
+        ;;
+        -f|--file)
+            filename=$2
+            shift 2
+        ;;
+        -e|--extension)
+            extension=$2
+            shift 2
+        ;;
+        -s|--stdout)
+            if [ "$2" != "" ]
+            then 
+                echo_stdin=$2
+            else
+                echo_stdin=true                
+            fi
+            shift 2
+        ;;
+        -u|--no-uptime)
+            uptime_on=$false
+            shift 1
+        ;;
+        -b|--no-battery)
+            battery_on=$false
+            shift 1
+        ;;
+        -d|--no-thermal)
+            thermal_on=$false
+            shift 1
+        ;;
+        -c|--comment)
+            comment="$2"
+            shift 2
+        ;;
+        -p|--prefix)
+            prefix="[$2] "
+            shift 2
+        ;;
+        -a|--all)
+            uptime_on=true
+            battery_on=true
+            thermal_on=true
+            shift 1
+        ;;
+        --) 
+            shift 
+            break 
+        ;;
+        *)
+            echo "This is, of course, impossible... Milliways?" >& 2
+            exit -1 
+        ;;
+    esac
+done
+
+# Create the base directory,
+dir=`dirname "$filename.$extension"`
+if [ ! \( -d "$dir" \) ] 
+then
+    mkdir -p "$dir"
+    if [ $? != 0 ]
+    then
+        echo "$0:Directory does not exist and can't be created: $dir" >& 2
+        exit 1 
+    fi
+fi
+
+# Create the log file. 
+if [ ! \( -e "$filename.$extension" \) ] 
+then
+    touch "$filename.$extension"
+    if [ $? != 0 ]
+    then
+        echo "$0:File does not exist and can't be created: $dir" >& 2
+        exit 1 
+    fi
+fi
+
+# The main loop thing.
+while true
+do    
+    # Gather information.
+    [ $uptime_on ] && \
+        uptime=`uptime | tr -s ' ' | cut -f 1 --complement -d ' '`
+    [ $battery_on ] && \
+        battery=`acpi -b | tr -s ' ' | cut -f 2,5,6,7 -d ' '`
+    [ $thermal_on ] && \
+        thermal=`acpi -tB | tr -s ' ' | cut -f 4,5,7 -d ' ' | tr -d ','`
+
+    # Compose the message.
+    message=""
+    [ -n "$uptime" ] && \
+        message="$message$uptime "
+    [ -n "$battery" ] && \
+        message="$message$battery "
+    [ -n "$thermal" ] && \
+        message="$message$thermal "
+    [ -n "$comment" ] && \
+        message="$message#$comment"
+    [ -n "$prefix" ] && \
+        message="$prefix$message"
+
+    # Send message to file, etc.
+    [ $echo_stdin == true ] && \
+        echo -e $message | tee -a "$filename.$extension" || \
+        echo -e $message >> "$filename.$extension"
+
+    # Wait and repeat.
+    sleep $sleep_time
+done
+
