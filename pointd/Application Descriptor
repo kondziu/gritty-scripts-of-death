@@ -1,0 +1,8 @@
+MIDlet-Version: 0.3.0
+MIDlet-Vendor: Konrad Siek
+MIDlet-Jar-URL: Pointd.jar
+MicroEdition-Configuration: CLDC-1.0
+MIDlet-2: Point'd Lite,/pointd64.png,pl.poznan.pointd.Lcdui
+MIDlet-1: Point'd,/pointd64.png,pl.poznan.pointd.Lwuit
+MicroEdition-Profile: MIDP-2.0
+MIDlet-Name: Point'd
