@@ -1,21 +1,3 @@
-/* 
- *  Copyright 2011 Konrad Siek <konrad.siek@gmail.com>
- *
- *  This file is part of Point'd.
- *
- *  Point'd is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  Point'd is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with Point'd.  If not, see <http://www.gnu.org/licenses/>.  
- */
 package pl.poznan.pointd;
 
 import java.util.Enumeration;
@@ -60,6 +42,9 @@ public class Lcdui extends MIDlet implements CommandListener {
 
 	StringItem scoreA;
 	StringItem scoreB;
+	StringItem minorScoreA;
+	StringItem minorScoreB;
+	
 	StringItem percent;
 
 	private StringPair players;
@@ -112,6 +97,9 @@ public class Lcdui extends MIDlet implements CommandListener {
 
 		scoreA = new StringItem("Score A", "0");
 		scoreB = new StringItem("Score B", "0");
+		
+		minorScoreA = new StringItem("Minor Score A", "0");
+		minorScoreB = new StringItem("Minor Score B", "0");
 
 		percent = new StringItem("Win ratio", "0%");
 
@@ -138,6 +126,8 @@ public class Lcdui extends MIDlet implements CommandListener {
 		form.append(new Spacer(SPACER_WIDTH, SPACER_HEIGHT));
 		form.append(scoreA);
 		form.append(scoreB);
+		form.append(minorScoreA);
+		form.append(minorScoreB);
 		
 		form.append(new Spacer(SPACER_WIDTH, SPACER_HEIGHT));
 		
@@ -243,6 +233,11 @@ public class Lcdui extends MIDlet implements CommandListener {
 				percentString = percentString.substring(0, 6);
 			}
 			this.percent.setText(percentString + "%");
+			
+			
+			// Write out each player's minor scores.
+			this.minorScoreA.setText(minorA + "");
+			this.minorScoreB.setText(minorB + "");
 
 			return;
 		}

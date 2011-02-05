@@ -1,6 +1,6 @@
 MIDlet-1: Point'd,/pointd64.png,pl.poznan.pointd.Lwuit
 MIDlet-2: Point'd Lite,/pointd64.png,pl.poznan.pointd.Lcdui
-MIDlet-Jar-Size: 627708
+MIDlet-Jar-Size: 617961
 MIDlet-Jar-URL: Pointd.jar
 MIDlet-Name: Point'd
 MIDlet-Vendor: Konrad Siek

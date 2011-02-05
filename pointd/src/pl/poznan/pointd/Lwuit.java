@@ -1,21 +1,3 @@
-/* 
- *  Copyright 2011 Konrad Siek <konrad.siek@gmail.com>
- *
- *  This file is part of Point'd.
- *
- *  Point'd is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  Point'd is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with Point'd.  If not, see <http://www.gnu.org/licenses/>.  
- */
 package pl.poznan.pointd;
 
 import java.io.IOException;
@@ -59,6 +41,8 @@ public class Lwuit extends MIDlet implements ActionListener {
 	private TextArea minorTotal;
 	private Label scoreA;
 	private Label scoreB;
+	private Label minorScoreA;
+	private Label minorScoreB;
 	private Label percentage;
 	private Engine engine;
 	private Label status;
@@ -127,7 +111,7 @@ public class Lwuit extends MIDlet implements ActionListener {
 
 	private void initScoreForm() {
 		scoreForm = new Form("Point'd");
-		TableLayout layout = new TableLayout(7, 4);
+		TableLayout layout = new TableLayout(8, 4);
 		scoreForm.setLayout(layout);
 		scoreForm.show();
 
@@ -155,6 +139,7 @@ public class Lwuit extends MIDlet implements ActionListener {
 
 		Label percentageLabel = new Label("Percentage");
 		Label scoreLabel = new Label("Score");
+		Label minorScoreLabel = new Label("Minor Score");
 
 		majorA = new TextArea("");
 		majorB = new TextArea("");
@@ -171,6 +156,10 @@ public class Lwuit extends MIDlet implements ActionListener {
 
 		scoreA = new Label("0");
 		scoreB = new Label("0");
+		
+		minorScoreA = new Label("0");
+		minorScoreB = new Label("0");
+		
 		percentage = new Label("0%");
 
 		Constraint percentageSpan = layout.createConstraint();
@@ -200,6 +189,11 @@ public class Lwuit extends MIDlet implements ActionListener {
 		scoreForm.addComponent(scoreLabel);
 		scoreForm.addComponent(scoreA);
 		scoreForm.addComponent(scoreB);
+		scoreForm.addComponent(new Label(""));
+		
+		scoreForm.addComponent(minorScoreLabel);
+		scoreForm.addComponent(minorScoreA);
+		scoreForm.addComponent(minorScoreB);
 		scoreForm.addComponent(new Label(""));
 
 		scoreForm.addComponent(endSpan, status);
@@ -264,6 +258,10 @@ public class Lwuit extends MIDlet implements ActionListener {
 				percentString = percentString.substring(0, 6);
 			}
 			this.percentage.setText(percentString + "%");
+			
+			// Write out each player's minor scores.
+			this.minorScoreA.setText(minorA + "");
+			this.minorScoreB.setText(minorB + "");
 
 			return;
 		}
