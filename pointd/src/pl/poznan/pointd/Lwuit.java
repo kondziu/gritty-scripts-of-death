@@ -37,6 +37,8 @@ public class Lwuit extends MIDlet implements ActionListener {
 	private TextArea majorB;
 	private TextArea minorA;
 	private TextArea minorB;
+	private TextArea invulnerableA;
+	private TextArea invulnerableB;
 	private TextArea majorTotal;
 	private TextArea minorTotal;
 	private Label scoreA;
@@ -90,8 +92,7 @@ public class Lwuit extends MIDlet implements ActionListener {
 		for (Enumeration i = Engine.SCORING_TABLE.keys(); i.hasMoreElements();) {
 			IntPair key = (IntPair) i.nextElement();
 			IntPair value = Engine.SCORING_TABLE.get(key);
-			String text = key.a + "-" + key.b + " = " + value.a + ":"
-					+ value.b;
+			String text = key.a + "-" + key.b + " = " + value.a + ":" + value.b;
 			Label label = new Label(text);
 			tableForm.addComponent(label);
 			// list.addItem();
@@ -111,7 +112,7 @@ public class Lwuit extends MIDlet implements ActionListener {
 
 	private void initScoreForm() {
 		scoreForm = new Form("Point'd");
-		TableLayout layout = new TableLayout(8, 4);
+		TableLayout layout = new TableLayout(9, 4);
 		scoreForm.setLayout(layout);
 		scoreForm.show();
 
@@ -141,10 +142,16 @@ public class Lwuit extends MIDlet implements ActionListener {
 		Label scoreLabel = new Label("Score");
 		Label minorScoreLabel = new Label("Minor Score");
 
+		Label invulnerableLabel = new Label("Uncounted"); // Things that
+														  // don't count
+														  // either way
+
 		majorA = new TextArea("");
 		majorB = new TextArea("");
 		minorA = new TextArea("");
 		minorB = new TextArea("");
+		invulnerableA = new TextArea("");
+		invulnerableB = new TextArea("");
 
 		// majorA.setConstraint(TextArea.NUMERIC);
 		// majorB.setConstraint(TextArea.NUMERIC);
@@ -156,10 +163,10 @@ public class Lwuit extends MIDlet implements ActionListener {
 
 		scoreA = new Label("0");
 		scoreB = new Label("0");
-		
+
 		minorScoreA = new Label("0");
 		minorScoreB = new Label("0");
-		
+
 		percentage = new Label("0%");
 
 		Constraint percentageSpan = layout.createConstraint();
@@ -182,6 +189,11 @@ public class Lwuit extends MIDlet implements ActionListener {
 		scoreForm.addComponent(minorB);
 		scoreForm.addComponent(minorTotal);
 
+		scoreForm.addComponent(invulnerableLabel);
+		scoreForm.addComponent(invulnerableA);
+		scoreForm.addComponent(invulnerableB);
+		scoreForm.addComponent(new Label(""));
+
 		scoreForm.addComponent(percentageLabel);
 		scoreForm.addComponent(percentageSpan, percentage);
 		scoreForm.addComponent(new Label(""));
@@ -190,7 +202,7 @@ public class Lwuit extends MIDlet implements ActionListener {
 		scoreForm.addComponent(scoreA);
 		scoreForm.addComponent(scoreB);
 		scoreForm.addComponent(new Label(""));
-		
+
 		scoreForm.addComponent(minorScoreLabel);
 		scoreForm.addComponent(minorScoreA);
 		scoreForm.addComponent(minorScoreB);
@@ -228,7 +240,7 @@ public class Lwuit extends MIDlet implements ActionListener {
 		if (command == countCommand) {
 			clearStatus();
 			engine.clearWarning();
-			
+
 			int minorTotal = getIntOfField(this.minorTotal);
 			int minorA = getIntOfField(this.minorA);
 			int minorB = getIntOfField(this.minorB);
@@ -237,13 +249,17 @@ public class Lwuit extends MIDlet implements ActionListener {
 			int majorA = getIntOfField(this.majorA);
 			int majorB = getIntOfField(this.majorB);
 
+			int invulnerableA = getIntOfField(this.invulnerableA);
+			int invulnerableB = getIntOfField(this.invulnerableB);
+
 			// Determine which of the players have more points.
 			String winner = engine.determineWinner(majorA, minorA, majorB,
 					minorB, players);
 
 			// Determine how successful the victorious force was.
 			double percentage = engine.determinePercentage(majorA, minorA,
-					majorB, minorB, majorTotal, minorTotal, players);
+					majorB, minorB, majorTotal, minorTotal, invulnerableA,
+					invulnerableB, players);
 
 			// Determine what score each of the players get for the victory
 			IntPair score = engine.determineScore(percentage);
@@ -258,10 +274,12 @@ public class Lwuit extends MIDlet implements ActionListener {
 				percentString = percentString.substring(0, 6);
 			}
 			this.percentage.setText(percentString + "%");
-			
+
 			// Write out each player's minor scores.
-			this.minorScoreA.setText(minorA + "");
-			this.minorScoreB.setText(minorB + "");
+			this.minorScoreA.setText((int) engine.modifyMinorScore(minorA,
+					minorTotal, invulnerableB) + "");
+			this.minorScoreB.setText((int) engine.modifyMinorScore(minorB,
+					minorTotal, invulnerableA) + "");
 
 			return;
 		}
@@ -296,20 +314,20 @@ public class Lwuit extends MIDlet implements ActionListener {
 	private void clearStatus() {
 		status.setText("");
 	}
-	
-	private void setStatus(final String message) {		
+
+	private void setStatus(final String message) {
 		if (status.getText().length() > 0) {
 			// A warning is already displayed.
 			return;
 		}
-				
+
 		Runnable runnable = new Runnable() {
 			public void run() {
 				status.setText(message);
 				scoreForm.repaint();
 			}
 		};
-		
+
 		Display.getInstance().callSerially(runnable);
 	}
 }

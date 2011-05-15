@@ -37,14 +37,18 @@ public class Lcdui extends MIDlet implements CommandListener {
 	TextField majorA;
 	TextField minorA;
 
+	TextField invulnerableA;
+	TextField invulnerableB;
+
 	TextField majorB;
 	TextField minorB;
 
 	StringItem scoreA;
 	StringItem scoreB;
+
 	StringItem minorScoreA;
 	StringItem minorScoreB;
-	
+
 	StringItem percent;
 
 	private StringPair players;
@@ -91,21 +95,25 @@ public class Lcdui extends MIDlet implements CommandListener {
 
 		majorA = new TextField("Major A", "", TEXTFIELD_SIZE, TextField.ANY);
 		minorA = new TextField("Minor A", "", TEXTFIELD_SIZE, TextField.ANY);
+		invulnerableA = new TextField("Uncounted A", "", TEXTFIELD_SIZE,
+				TextField.ANY);
 
 		majorB = new TextField("Major B", "", TEXTFIELD_SIZE, TextField.ANY);
 		minorB = new TextField("Minor B", "", TEXTFIELD_SIZE, TextField.ANY);
+		invulnerableB = new TextField("Uncounted B", "", TEXTFIELD_SIZE,
+				TextField.ANY);
 
 		scoreA = new StringItem("Score A", "0");
 		scoreB = new StringItem("Score B", "0");
-		
+
 		minorScoreA = new StringItem("Minor Score A", "0");
 		minorScoreB = new StringItem("Minor Score B", "0");
 
 		percent = new StringItem("Win ratio", "0%");
 
 		players = new StringPair("A", "B");
-		
-		status = new StringItem("","");
+
+		status = new StringItem("", "");
 
 		engine = new Engine();
 
@@ -122,15 +130,19 @@ public class Lcdui extends MIDlet implements CommandListener {
 		form.append(minorTotal);
 		form.append(new Spacer(SPACER_WIDTH, SPACER_HEIGHT));
 
+		form.append(invulnerableA);
+		form.append(invulnerableB);
+		form.append(new Spacer(SPACER_WIDTH, SPACER_HEIGHT));
+
 		form.append(percent);
 		form.append(new Spacer(SPACER_WIDTH, SPACER_HEIGHT));
 		form.append(scoreA);
 		form.append(scoreB);
 		form.append(minorScoreA);
 		form.append(minorScoreB);
-		
+
 		form.append(new Spacer(SPACER_WIDTH, SPACER_HEIGHT));
-		
+
 		form.append(status);
 
 		return form;
@@ -147,7 +159,7 @@ public class Lcdui extends MIDlet implements CommandListener {
 			IntPair range = (IntPair) i.nextElement();
 			IntPair score = (IntPair) Engine.SCORING_TABLE.get(range);
 
-			//System.err.println(range + " " + score);
+			// System.err.println(range + " " + score);
 
 			String rangeString = range.a + "%" + "-" + range.b + "%";
 			String scoreString = score.a + ":" + score.b;
@@ -167,18 +179,18 @@ public class Lcdui extends MIDlet implements CommandListener {
 		this.display.setCurrent(this.scoreForm);
 		// Display.init(this);
 	}
-	
+
 	private void clearStatus() {
 		status.setText("");
 		status.setLabel("");
 	}
-	
+
 	private void setStatus(String type, String message) {
 		if (status.getText() != null && status.getText().length() > 0) {
 			// A warning is already displayed.
 			return;
 		}
-		
+
 		status.setText(message);
 		status.setLabel(type);
 	}
@@ -203,7 +215,7 @@ public class Lcdui extends MIDlet implements CommandListener {
 		if (command == this.count) {
 			clearStatus();
 			engine.clearWarning();
-			
+
 			int minorTotal = getIntOfField(this.minorTotal);
 			int minorA = getIntOfField(this.minorA);
 			int minorB = getIntOfField(this.minorB);
@@ -212,13 +224,17 @@ public class Lcdui extends MIDlet implements CommandListener {
 			int majorA = getIntOfField(this.majorA);
 			int majorB = getIntOfField(this.majorB);
 
+			int invulnerableA = getIntOfField(this.invulnerableA);
+			int invulnerableB = getIntOfField(this.invulnerableB);
+
 			// Determine which of the players have more points.
 			String winner = engine.determineWinner(majorA, minorA, majorB,
 					minorB, players);
 
 			// Determine how successful the victorious force was.
 			double percentage = engine.determinePercentage(majorA, minorA,
-					majorB, minorB, majorTotal, minorTotal, players);
+					majorB, minorB, majorTotal, minorTotal, invulnerableA,
+					invulnerableB, players);
 
 			// Determine what score each of the players get for the victory
 			IntPair score = engine.determineScore(percentage);
@@ -233,11 +249,12 @@ public class Lcdui extends MIDlet implements CommandListener {
 				percentString = percentString.substring(0, 6);
 			}
 			this.percent.setText(percentString + "%");
-			
-			
+
 			// Write out each player's minor scores.
-			this.minorScoreA.setText(minorA + "");
-			this.minorScoreB.setText(minorB + "");
+			this.minorScoreA.setText((int) engine.modifyMinorScore(minorA,
+					minorTotal, invulnerableB) + "");
+			this.minorScoreB.setText((int) engine.modifyMinorScore(minorB,
+					minorTotal, invulnerableA) + "");
 
 			return;
 		}

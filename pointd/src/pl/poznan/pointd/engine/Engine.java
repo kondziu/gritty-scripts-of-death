@@ -111,8 +111,8 @@ public class Engine {
 	 * @return the first or second element of the list given as players, or
 	 *         <code>null</code> if no winner can be determined (it's a draw).
 	 */
-	public String determineWinner(int majorA, int minorA, int majorB,
-			int minorB, StringPair players) {
+	public String determineWinner(double majorA, double minorA, double majorB,
+			double minorB, StringPair players) {
 
 		if (majorA > majorB) {
 			return players.a;
@@ -171,13 +171,20 @@ public class Engine {
 	 *            the maximum total achievable victory points
 	 * @param minorTotal
 	 *            the maximum total achievable kill points
+	 * @param invulnerableA
+	 *            the number of points belonging to player A that player B
+	 *            cannot score
+	 * @param invulnerableB
+	 *            the number of points belonging to player B that player A
+	 *            cannot score
 	 * @param players
 	 *            the symbols for the first and second player (a list of two
 	 *            elements)
 	 * @return a score of between 0 and 200.
 	 */
-	public double determinePercentage(int majorA, int minorA, int majorB,
-			int minorB, int majorTotal, int minorTotal, StringPair players) {
+	public double determinePercentage(double majorA, double minorA,
+			double majorB, double minorB, double majorTotal, double minorTotal,
+			double invulnerableA, double invulnerableB, StringPair players) {
 
 		if (pointsExceedTotal(majorA, majorB, majorTotal)) {
 			setWarning("More major points than total allows.");
@@ -195,17 +202,49 @@ public class Engine {
 
 		boolean aWon = (winner == players.a);
 
-		int majorWinner = aWon ? majorA : majorB;
-		int majorLooser = aWon ? majorB : majorA;
-		int minorWinner = aWon ? minorA : minorB;
-		int minorLooser = aWon ? minorB : minorA;
+		double majorWinner = aWon ? majorA : majorB;
+		double majorLooser = aWon ? majorB : majorA;
 
-		int majorDifference = majorWinner - majorLooser;
-		int minorDifference = minorWinner - minorLooser;
+		double invulnerableWinner = aWon ? invulnerableA : invulnerableB;
+		double invulnerableLooser = aWon ? invulnerableB : invulnerableA;
+
+		// double modifierWinner = minorTotal / (minorTotal -
+		// invulnerableWinner);
+		// double modifierLooser = minorTotal / (minorTotal -
+		// invulnerableLooser);
+
+		double minorWinner = modifyMinorScore(aWon ? minorA : minorB,
+				minorTotal, invulnerableLooser);
+		double minorLooser = modifyMinorScore(aWon ? minorB : minorA,
+				minorTotal, invulnerableWinner);
+
+		// System.err.println("invul " + invulnerableWinner + " "
+		// + invulnerableLooser);
+		// System.err.println("modif " + modifierWinner + " " + modifierLooser);
+
+		double majorDifference = majorWinner - majorLooser;
+		double minorDifference = minorWinner - minorLooser;
 
 		double percent = percentage(majorDifference, majorTotal);
-
 		return percent + percentage(minorDifference, minorTotal);
+	}
+
+	/**
+	 * Modify a minor score to factor in the invulnerable points of the other
+	 * player.
+	 * 
+	 * @param minorScore
+	 *            points achieved by one player
+	 * @param minorTotal
+	 *            the total number of achievable points per player
+	 * @param invulnerable
+	 *            the number of points of the other player that cannot be
+	 *            achieved at all
+	 * @return a score with the other player's invuLnerable points factored in.
+	 */
+	public double modifyMinorScore(double minorScore, double minorTotal,
+			double invulnerable) {
+		return minorScore * minorTotal / (minorTotal - invulnerable);
 	}
 
 	/**
@@ -223,7 +262,8 @@ public class Engine {
 	 * @return <code>true</code> if either player got more points than the
 	 *         total, otherwise <code>false</code>.
 	 */
-	private boolean pointsExceedTotal(int pointsA, int pointsB, int pointsTotal) {
+	private boolean pointsExceedTotal(double pointsA, double pointsB,
+			double pointsTotal) {
 		return pointsA > pointsTotal || pointsB > pointsTotal;
 	}
 
@@ -249,7 +289,7 @@ public class Engine {
 			IntPair range = (IntPair) i.nextElement();
 			int a = range.a, b = range.b;
 
-			if (percentage >= a && percentage <= b + 1) {
+			if (percentage >= a && percentage < b + 1) {
 				return SCORING_TABLE.get(range);
 			}
 
