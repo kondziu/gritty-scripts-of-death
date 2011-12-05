@@ -355,18 +355,18 @@ if __name__ == '__main__':
         title = 'distance between "%s" and "%s"' % (word_a, word_b)
         maxlen = max([len(i) for i in API.keys()] + [len(title)])
 
-        row = '| %' + str(maxlen) + 's | %5d | %5d |\n'
-        strrow = row.replace('d', 's')
+        row = '| %' + str(maxlen) + 's | %5.1f | %5.1f |\n'
+        strrow = row.replace('.1f', 's')
         edge = '%s\n' % ('-' * (29 + maxlen))
         rule = strrow.replace('|', '+').replace(' ', '-') % \
                                             (maxlen * '-', 5 * '-', 5 * '-')
         
         stdout.write(rule)
-        stdout.write(row.replace('d', 's') % (title, 'words', 'lists'))
+        stdout.write(row.replace('.1f', 's') % (title, 'words', 'lists'))
         stdout.write(rule)
         for method in API:
-            word_r = API[method](word_a, word_b)
-            sentence_r = API[method](sentence_a, sentence_b) 
+            word_r = float(API[method](word_a, word_b))
+            sentence_r = float(API[method](sentence_a, sentence_b))
             stdout.write(row % (method, word_r, sentence_r))
         stdout.write(rule)
         stdout.write("\n")
