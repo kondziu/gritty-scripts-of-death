@@ -1,0 +1,120 @@
+% ppprog is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version.
+% 
+% ppprog is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+% 
+% You should have received a copy of the GNU General Public License
+% along with ppprog.  If not, see <http://www.gnu.org/licenses/>.
+%
+% Copyright 2012 Konrad Siek <konrad.siek@cs.put.edu.pl>
+
+\usepackage{calc}
+
+% Counters.
+\newcounter{pptabdepth}
+\newcounter{pplineno}
+\newcounter{pptabiterator}
+
+% Main environment.
+\newenvironment{ppprog}[2][\NewProgram]{%
+    \begin{math}
+    \begin{array}{ll} 
+    \setcounter{pptabdepth}{0}
+    \setcounter{pplineno}{#1}
+    \ppname{#2}
+}{%
+    \end{array}
+    \end{math}
+}
+
+% Internal macros.
+%\def\ppalgname{noname}
+\def\ppname#1{\gdef\ppalgname{#1}}
+
+\def\ppstart#1#2#3{\pp #1\ #2\ #3\ppinctabdepth}
+\def\ppend{\ppdectabdepth}
+
+\def\ppinctabdepth{\addtocounter{pptabdepth}{1}}
+\def\ppdectabdepth{\addtocounter{pptabdepth}{-1}}
+
+\def\pplinestyle#1{\text{{\tiny #1}}}
+\def\ppemptylinesymbol{$\hookrightarrow$}
+
+\def\ppindent#1{%
+    \setcounter{pptabiterator}{0}
+    \loop
+        \ifnum\value{pptabiterator} < #1%
+        \addtocounter{pptabiterator}{1}
+        \pptab%
+        \repeat%
+}
+
+\def\ppline{%
+    \addtocounter{pplineno}{1}
+    \pplinestyle{\arabic{pplineno}} &
+    \ppindent{\arabic{pptabdepth}}
+}
+
+\def\ppnonumline{%
+    \addtocounter{pplineno}{1}
+    \pplinestyle{\ppemptylinesymbol} &
+    \ppindent{\arabic{pptabdepth}}
+}
+
+\def\ppbrokenline{%
+    \pplinestyle{\ppemptylinesymbol} &
+    \ppindent{\arabic{pptabdepth}}
+}
+
+% Basic end-user--friendly(ish) commands:
+\newcommand{\pplabel}[1]{\def\@currentlabel{\arabic{pplineno}}\label{#1}}
+
+\def\pp{\\\ppline}
+\def\pplab#1{\pp\pplabel{#1}}
+\def\ppempty{\\\ppnonumline}
+\def\ppin{\ppindent{\arabic{pptabdepth}}}
+\newcommand{\ppargbreak}[1][6]{\\\ppbrokenline\ppindent{#1}}
+
+\def\NewProgram{0}
+    \addtocounter{pplineno}{1}
+\def\ContinueProgram{\value{pplineno}}
+\def\ProgramStartsAtLine#1{#1-1}
+
+\def\pptab{\quad}
+\newcommand{\ppbreak}[1][0.1cm]{\vspace{#1}}
+
+% Pre-defined font styles
+\def\ppkeyword#1{{\bf #1}}
+\def\ppfunction#1{{\rm #1}}
+\def\ppliteral#1{{\tt #1}}
+\def\pptype#1{{\sf #1}}
+\def\ppvariable#1{{\sf #1}}
+
+% Pre-defined structures, keywords, literals, etc. 
+\def\If#1{\ppstart{\ppkeyword{if}}{#1}{\ppkeyword{then}}}
+\def\Fi{\ppend}
+
+\def\For#1{\ppstart{\ppkeyword{for}}{#1}{\ppkeyword{do}}}
+\def\While#1{\ppstart{\ppkeyword{while}}{#1}{\ppkeyword{do}}}
+\def\Foreach#1{\ppstart{\ppkeyword{for~each}}{#1}{\ppkeyword{do}}}
+\def\Done{\ppend}
+
+\def\Proc#1#2{%
+    \ppstart{\ppkeyword{proc}}{\ppfunction{#1}(#2)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+\def\Func#1#2{%
+    \ppstart{\ppkeyword{func}}{\ppfunction{#1}(#2)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+\def\DistProc#1#2#3{%
+    \ppstart{\ppkeyword{proc}}{\ppfunction{#2#1}(#3)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+\def\DistFunc#1#2#3{%
+    \ppstart{\ppkeyword{func}}{\ppfunction{#2#1}(#3)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+\def\EndProc{\ppend\ppbreak}
+\def\EndFunc{\ppend\ppbreak}
+
+\def\Null{\ppliteral{null}}
+\def\True{\ppliteral{true}}
+\def\False{\ppliteral{false}}
