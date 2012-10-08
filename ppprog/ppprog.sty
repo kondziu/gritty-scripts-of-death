@@ -22,6 +22,9 @@
 
 % Main environment.
 \newenvironment{ppprog}[2][\NewProgram]{%
+    % necessary to have it stick to the top in top-aligned minipages
+    \vspace{0cm}     
+    
     \begin{math}
     \begin{array}{ll} 
     \setcounter{pptabdepth}{0}
@@ -71,11 +74,13 @@
     \ppindent{\arabic{pptabdepth}}
 }
 
-% Basic end-user--friendly(ish) commands:
 \newcommand{\pplabel}[1]{\def\@currentlabel{\arabic{pplineno}}\label{#1}}
 
+% Basic end-user--friendly(ish) commands:
+
 \def\pp{\\\ppline}
-\def\pplab#1{\pp\pplabel{#1}}
+\def\pplab#1{\pplabel{line:\ppalgname-#1}}
+\def\pplineref#1#2{line~\ref{line:#1-#2}}
 \def\ppempty{\\\ppnonumline}
 \def\ppin{\ppindent{\arabic{pptabdepth}}}
 \newcommand{\ppargbreak}[1][6]{\\\ppbrokenline\ppindent{#1}}
@@ -97,6 +102,7 @@
 
 % Pre-defined structures, keywords, literals, etc. 
 \def\If#1{\ppstart{\ppkeyword{if}}{#1}{\ppkeyword{then}}}
+\def\Else{\ppdectabdepth \\\ppline \ppkeyword{else} \ppinctabdepth}
 \def\Fi{\ppend}
 
 \def\For#1{\ppstart{\ppkeyword{for}}{#1}{\ppkeyword{do}}}
@@ -118,3 +124,8 @@
 \def\Null{\ppliteral{null}}
 \def\True{\ppliteral{true}}
 \def\False{\ppliteral{false}}
+
+\def\Return#1{\ppkeyword{return}~#1}
+\def\Lock#1{\ppkeyword{lock}~#1}
+\def\Unlock#1{\ppkeyword{release}~#1}
+\def\Wait#1{\ppkeyword{wait~until}~#1}
