@@ -82,6 +82,7 @@
 \def\pplab#1{\pplabel{line:\ppalgname-#1}}
 \def\pplineref#1#2{line~\ref{line:#1-#2}}
 \def\ppempty{\\\ppnonumline}
+\def\ppmt{\ppempty}
 \def\ppin{\ppindent{\arabic{pptabdepth}}}
 \newcommand{\ppargbreak}[1][6]{\\\ppbrokenline\ppindent{#1}}
 
@@ -102,6 +103,8 @@
 
 % Pre-defined structures, keywords, literals, etc. 
 \def\If#1{\ppstart{\ppkeyword{if}}{#1}{\ppkeyword{then}}}
+\def\Elif#1{\ppdectabdepth \\\ppline 
+    \ppkeyword{else~if}~#1~\ppkeyword{then} \ppinctabdepth}
 \def\Else{\ppdectabdepth \\\ppline \ppkeyword{else} \ppinctabdepth}
 \def\Fi{\ppend}
 
