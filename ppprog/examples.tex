@@ -1,0 +1,94 @@
+\documentclass[11pt, oneside]{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{multicol}
+
+\usepackage{ppprog}
+
+\begin{document}
+\setlength\parindent{0pt}
+
+\begin{multicols}{2}
+
+\begin{ppprog}{sorting}
+
+\Proc{bubble}{A, n}
+    \While{\neg s}
+        \pp s \leftarrow \ppliteral{True}
+        \For{ i = 1, \ldots, n + 1}
+            \If{A(i - 1) > A(i)}
+                \pp \ppprocedure{swap}\big(A(i-1), A(i)\big)
+                \pp s \leftarrow \ppliteral{False}
+            \Fi
+        \Done
+    \Done
+    \pp \Return{A}
+\EndProc
+
+\Proc{selection}{A, n}
+    \For{j = 1, \ldots, n + 1}
+        \pp \ppvariable{min} \leftarrow j
+        \For{ i = 1, \ldots, n + 1}
+            \If{A(i) < A(\ppvariable{min})}
+                \pp \ppvariable{min} \leftarrow i
+            \Fi
+        \Done
+
+        \If{\ppvariable{min} \neq j}
+            \pp \ppprocedure{swap}\big(A(j), A(\ppvariable{min})\big)
+        \Fi
+    \Done
+    \pp \Return{A}
+\EndProc
+
+\end{ppprog}
+
+\columnbreak
+
+\begin{ppprog}[\ContinueProgram]{sorting}
+
+\Proc{insertion}{A, n}
+    \For{i = 1, \ldots, n + 1}
+        \pp v \leftarrow A(i)
+        \pp \ppvariable{p} \leftarrow i
+        \While{ \ppvariable{p} > 1 \wedge v < A(\ppvariable{p} - 1)}
+            \pp A(\ppvariable{p}) \leftarrow A(\ppvariable{p} -1)
+            \pp \ppvariable{p} \leftarrow \ppvariable{p} - 1
+        \Done
+
+        \pp A(\ppvariable{p}) \leftarrow v
+    \Done
+    \pp \Return{A}
+\EndProc
+
+\Proc{merge}{A, n}
+    \If{n \le 1}
+        \pp \Return{A}
+    \Fi
+    
+    \pp \ppvariable{mid} = \lfloor n / 2 \rfloor
+    \Foreach{v \in \big[A(i)~|~i < \ppvariable{mid} \big]}
+        \pp L \leftarrow L \cup v
+    \Done
+    \Foreach{v \in \big[A(i)~|~i \ge \ppvariable{mid} \big]}
+        \pp R \leftarrow R \cup v
+    \Done
+    
+    \pp \Return{\ppfunction{merge}(L, \ppvariable{mid}) \ppargbreak[2]
+        :: \ppfunction{merge}(R, n - \ppvariable{mid})}
+\EndProc
+
+\end{ppprog}
+
+\end{multicols}
+
+Sorting algorithms: bubble sort at \pplineref{sorting}{bubble}, selection sort
+at \pplineref{sorting}{selection}, insertion sort at
+\pplineref{sorting}{insertion}, and some kind of merge sort at
+\pplineref{sorting}{merge}.
+
+\end{document}

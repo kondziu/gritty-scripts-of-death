@@ -1,0 +1,32 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+
+\usepackage{ppprog}
+
+\begin{document}
+
+\begin{ppprog}{edge-labelling-alg}
+
+\Proc{depthFirstSearch}{G,v}
+    \pp E \leftarrow E \cup \{ v \}
+    \Foreach{e \in \ppfunction{edges}(G)}
+        \If{e \not\in E}
+            \pp v' \leftarrow \ppfunction{adjacent}(G, v, e)
+            \If{v' \not\in E} 
+                \pp D \leftarrow D \cup \{ v' \}
+                \pp \ppfunction{depthFirstSearch}(G, v')
+            \Else
+                \pp B \leftarrow B \cup \{ v' \}
+            \Fi
+        \Fi
+    \Done
+    \pp \Return{D, B}
+
+\end{ppprog}
+
+\end{document}
