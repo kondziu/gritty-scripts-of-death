@@ -14,6 +14,8 @@
 % Copyright 2012 Konrad Siek <konrad.siek@cs.put.edu.pl>
 
 \usepackage{calc}
+%\usepackage{xcolor}
+\usepackage{xstring}
 
 % Counters.
 \newcounter{pptabdepth}
@@ -26,10 +28,11 @@
     \vspace{0cm}     
     
     \begin{math}
-    \begin{array}{ll} 
+    \begin{array}{ll}
     \setcounter{pptabdepth}{0}
     \setcounter{pplineno}{#1}
-    \ppname{#2}
+    \ppname{#2}  
+    \ppoptional
 }{%
     \end{array}
     \end{math}
@@ -97,6 +100,7 @@
 % Pre-defined font styles
 \def\ppkeyword#1{{\bf #1}}
 \def\ppfunction#1{{\rm #1}}
+\def\ppprocedure#1{{\rm #1}}
 \def\ppliteral#1{{\tt #1}}
 \def\pptype#1{{\sf #1}}
 \def\ppvariable#1{{\sf #1}}
@@ -114,15 +118,30 @@
 \def\Done{\ppend}
 
 \def\Proc#1#2{%
-    \ppstart{\ppkeyword{proc}}{\ppfunction{#1}(#2)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+    \ppstart{\ppkeyword{proc}}{\ppprocedure{#1}(#2)}{\ppdefine}\pplabel{line:\ppalgname-#1}}
 \def\Func#1#2{%
-    \ppstart{\ppkeyword{func}}{\ppfunction{#1}(#2)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+    \ppstart{\ppkeyword{func}}{\ppfunction{#1}(#2)}{\ppdefine}\pplabel{line:\ppalgname-#1}}
 \def\DistProc#1#2#3{%
-    \ppstart{\ppkeyword{proc}}{\ppfunction{#2#1}(#3)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+    \ppstart{\ppkeyword{proc}}{\ppprocedure{#2#1}(#3)}{\ppdefine}\pplabel{line:\ppalgname-#1}}
 \def\DistFunc#1#2#3{%
-    \ppstart{\ppkeyword{func}}{\ppfunction{#2#1}(#3)}{\triangleq}\pplabel{line:\ppalgname-#1}}
+    \ppstart{\ppkeyword{func}}{\ppfunction{#2#1}(#3)}{\ppdefine}\pplabel{line:\ppalgname-#1}}
 \def\EndProc{\ppend\ppbreak}
 \def\EndFunc{\ppend\ppbreak}
+
+% TODO undocumented
+\def\ppdefine{\triangleq}
+\def\Input{\ppstart{\ppkeyword{input}:}{}{}\pplabel{line:\ppalgname-input}}
+\def\EndInput{\ppend\ppbreak}
+\def\ppgets{\leftarrow}
+\def\ppobjaccess{.}
+\def\ObjectiveDistProc#1#2#3#4{%
+    \ppstart{\ppkeyword{proc}}{\ppprocedure{#3#1\ppobjaccess#2}(#4)}{\ppdefine}\pplabel{line:\ppalgname-#2}}
+\def\Fork{\ppstart{\ppkeyword{fork}}{}{}}
+\def\EndFork{\ppend}
+\def\ppref#1#2{\ref{line:#1-#2}}
+\def\pplinesref#1#2#3{lines~\ref{line:#1-#2}--\ref{line:#1-#3}}
+\def\ppoptional{}
+\def\pphl#1#2{\colorbox{#1}{#2}}
 
 \def\Null{\ppliteral{null}}
 \def\True{\ppliteral{true}}
@@ -130,6 +149,10 @@
 
 \def\Return#1{\ppkeyword{return}~#1}
 \def\Lock#1{\ppkeyword{lock}~#1}
-\def\Unlock#1{\ppkeyword{release}~#1}
+\def\Unlock#1{\ppkeyword{unlock}~#1}
 \def\Wait#1{\ppkeyword{wait~until}~#1}
+\def\Join#1{\ppkeyword{join~with}~#1}
 \def\Notify#1{\ppkeyword{notify}~#1}
+
+\def\Thread#1{\ppstart{\ppkeyword{thread}~#1:}{}{}}
+\def\EndThread{\ppend}
