@@ -1,0 +1,14 @@
+replacement point??file??where will the characters for marked replacement be removed
+question position??right??denotes the position of the question in line <BR> (in relation to the hint based in the centre)
+replace: .??<SPACE>??full stop mark '.' will be replaced with an empty character ' '
+comment??//??some lines may include commented fragments at the end of line, which will not be read by the program<BR>for economical purposes these are not saved in the memory, and might disappear
+replace: ;??<SPACE>??semicolo';' will be replaced with an empty character ' '
+alternative??||??if multiple answers are correct this symbol is used to divide them
+hint close??]??denotes the start of hint
+type: image??<img>??if placed, question becomes path for an image
+hint open??[??denotes the end of hint
+replace: :??<SPACE>??colon ':' will be replaced with an empty character ' '
+replace:<QUESTION>??<SPACE>??question mark '<QUESTION> ' will be replaced with an empty character ' '
+type: sound??<snd>??if placed, question becomes path for a sound file
+replace: !??<SPACE>??exclamation mark '!' will be replaced with an empty character ' '
+replace: ,??<SPACE>??comma ',' will be replaced with an empty character ' '

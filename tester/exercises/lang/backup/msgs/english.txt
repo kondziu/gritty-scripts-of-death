@@ -1,0 +1,100 @@
+Are you sure you want to remove??Are you sure you want to remove<QUESTION>
+about author??by Konrad Siek
+about date??(issue date 5.09.2006)
+about description??a language learning assistant
+about title??Tester Program v2.003
+about??About
+add option title??Add option
+add??Add
+address??Address
+answers??Answers
+are you sure you want to remove??Are you sure you want to remove<QUESTION>
+are you sure you want to stop??Are you sure you want to stop current work<QUESTION>
+cancel button text??Cancel
+cancel??Cancel
+captions and messages tooltip??Panel for captions and messages which are displayed on buttons, labels etc.
+captions and messages??Captions and Messages
+close??Close
+configuration title??Tester v2.1 Configuration
+configuration??Configuration
+confirm??Confirm
+default??default
+description??Description
+details view button tooltip text??Details
+do you want to remove??Do you want to remove element<QUESTION>
+do you want to replace it??Do you want to replace it<QUESTION>
+doing repetition??Progressing to Repetition.
+download??Download
+dynamic tree title??Tester v2.1 File Manager
+edit question??Edit Question
+end test??This is the end of the test.
+erase repetition??Erase Repetition
+error message files??Error Message Files
+error messages tooltip??Panel for error message texts which show up when something goes wrong.
+error messages??Error Messages
+file name label text??File Name:
+file paths tooltip??Panel for paths of configuration files necessary for ensuring the correct working of the program.
+file paths??File Paths
+file??File
+files of type label text??Files of Type:
+forced repetition??Force Repetition
+form title??Tester v2.1
+general options tooltip??Panel for general options having to do with how the program runs.
+general options??General Options
+good work title??Good
+good work??Good work!
+handbook??User's Handbook
+help button text??Help
+help me??Help Me
+help??Help
+hint??Hint
+home folder tooltip text??Home Directory
+ignore case??Ignore Case
+information??Information
+internet??Internet
+key??Key
+language version title??Tester v2.1 Language Version
+language version??Language Version
+list view button tooltip text??List
+manage??Manage
+message and caption files??Message and Caption Files
+mkdir??Make Directory
+new folder tooltip text??New Directory
+ok??OK
+open button text??Open
+open??Open
+out of repetition??There is no more repetition.
+poor work title??Well...
+poor work??Almost right! Try again.
+possible options??Possible Options
+preferences??Preferences
+progressing to input??Progressing to New Material.
+question??Question
+quick view??Quick View
+quit??Quit
+regular expressions tooltip??Format specification for input files.
+regular expressions??Regular Expressions
+reload??Reload
+remove??Remove
+repetition??Repetition
+reverse??Reverse
+rules tooltip??List of equivalent forms.
+rules??Rules
+save button text??Save
+save changes??Do you want to save changes to test file<QUESTION>
+save??Save
+score??Score:
+set address for download??Set address for download:
+set??Set
+shuffle??Shuffle
+start test??Start Test
+state??State
+statistics??Statistics
+stop??Stop
+test??Test
+training mode??Training Mode
+up folder tooltip text??Up One Level
+update button text??Update
+use rules??Use Rules
+where would you like to save??Where would you like to save your progress<QUESTION>
+would you like to save??Would you like to save your progress<QUESTION>

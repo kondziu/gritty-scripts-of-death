@@ -1,0 +1,22 @@
+dir icon??icons/dir.gif??directory icon (for file manager use)
+dictionaries??tests??paths to directories holding dictionary files separated by a default system separator <br> (Windows ';', Unix ':', etc.)
+good icon??icons/good.gif??icon shown when answer was matched
+root icon??icons/root.gif??root icon (for file manager use)
+regex??files/regex.txt??file containing regular expressions (input file format)
+error directory??lang/errors??folder containing language files (concerning error messages)
+default address??http://www.program2005.republika.pl/tester/??default address shown in the download dialogue box
+file chooser default path??../Dropbox/UBUtest??default path for the file chooser component
+media player??vlc??multimedia player used for opening the handbook presentation as well as files
+message directory??lang/msgs??folder containing language files (concerning messages)
+file icon??icons/file.gif??file icon (for file manager use)
+rules??files/rules.txt??file containing rules
+input directory??tests??directory where tests are stored (file manager rot directory)
+messages??lang/msgs/english.txt??currently used message language file
+statistics??stats/stats.txt??file containing statistics
+input??./tests/test.txt??currently selected input
+errors??lang/errors/english.txt??currently used error message language file
+poor icon??icons/poor.gif??icon shown when answer was not matched
+path??files/paths.txt??file containing configuration file paths
+handbook??handbook.avi??path to handbook video presentation
+options??files/options.txt??file containing general options
+repetition??tests/repeat.txt??file where repetition is stored

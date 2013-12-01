@@ -1,0 +1,28 @@
+show hint??on??hint will be shown along with the question??off??on
+set config on exit??on??attempt saving configuration when exiting the program??off??on
+use rules??on??some recognized contractable phrases will be matched also in contracted forms??off??on
+mode??standard??standard (training) mode: students work on a question until it is correct;<BR> test mode: students only attempt each question once;??standard??test
+shuffle??off??test questions will be fed in random order??off??on
+resizible window??on??the window of main frame will be resizable (after restart)??off??on
+student edits or removes??off??students can edit or remove test questions during the test??off??on
+ignore case??on??case of characters will be taken into account during question-answer comparison??off??on
+debug??off??Shows debug messages - obsolete??off??on
+reverse??off??test questions will be fed in reversed order??off??on
+student configures??on??student can change program settings<BR>WATCH OUT! AFTER SETTING CONFIGURATION IS ONLY ACCESSIBLE THROUGH DIRECT FILE INPUT!??off??on
+enable choosable language??on??language menu can be operated??off??on
+erase repetition??off??enabled student to delete file containing repetition??off??on
+student stops test??on??off??on
+repetition type??forced??standard repetition: student is asked to correct his mistakes before he can attempt next test;<BR>forced repetition: student is corrects his mistakes before the test is finished;??forced??standard
+show menu??on??menu with advanced options will be shown??off??on
+show status and clock??on??clock and a status bar will be shown at the bottom of the screen??off??on
+indicate error on exit??off??if a file of configuration or input cannot be saved at the end an information will be shown??off??on
+student manages files??on??student will be able to open the file manager tool to manage the test database on their own??off??on
+allow early help??on??student can press help before attempting an answer.??on??off
+question window width??500??width of the window showing questions. Default size obtained by setting to "default"
+answer window width??612??width of the window showing answers. Default size obtained by setting to "default"
+question window height??250??height of the window showing answers. Default size obtained by setting to "default"
+
+start test??local??What to do when test is started without a selected file: local dir, website, or display dialog with choice; default: ask??web??local??ask
+show percentage??on??Enable or disable percentages; default: on??off??on
+file encoding??default??Select file encoding for all opened files. Examples: default, WINDOWS-1250, UTF-8
+

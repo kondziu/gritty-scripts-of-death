@@ -1,0 +1,31 @@
+Configuration File Error??B³¹d pliku konfiguracyjnego
+Error copying file??B³¹d podczas kopiowania pliku!
+Error writing file??B³¹d podczas zapisu pliku!
+cannot make dir??Nie mo¿na utworzyæ katalogu
+concerning errors??Dotycz¹cy Komunikatów B³êdów
+concerning file paths??Dotycz¹cy œcie¿ek plików
+concerning input??Materia³u testowego
+concerning messages??Etykiet elementów i treœci wiadomoœci
+concerning options??Konfiguracji programu
+concerning regex??Wewnêtrznych wyra¿eñ regularnych/formatu danych wejœciowych i wyjœciowych
+concerning rules??Listy zasad zamian w pliku wejœciowym
+concerning??Concerning
+deleting not successful??Usuwanie siê nie powiod³o!
+do you want to replace it??Czy chcesz go zamieniæ<QUESTION>
+error reading file??B³¹d odczytu pliku:
+error??B³¹d
+file already exists??Taki plik ju¿ istnieje:
+input not set successfully??Opcja nie zosta³a zauktualizowana!
+invalid root dir??Katalog Ÿród³owy jest niew³aœciwy
+loading default settings??Za³adowano domyœlne ustawienia
+malformed url??Niew³aœciwy adres URL:
+no connection to url??Brak po³¹czenia z adresem URL:
+no key??Nie mozna wygenerowaæ opcji bez klucza.
+no state??Nie mo¿na wygenerowaæ opcji bez stanu.
+no valid answers??Wszystkie odpowiedzi s¹ niew³aœciwe. Nie mo¿na utworzyæ obiektu bez odpowiedzi.
+no_question??Cannot generate an item without question or file path.
+not possible option choice??Taka opcja nie mo¿e zostaæ ustawiona
+operation unsuccessfull??Operacja siê nie powiod³a
+possible entries??Oto lista mo¿liwych wpisów:
+unknown??nieznany
+warning??Ostrze¿enie

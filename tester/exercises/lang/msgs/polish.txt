@@ -1,0 +1,104 @@
+Are you sure you want to remove??Czy na pewno chcesz usun¹æ<QUESTION>
+Browse??Przegl¹daj
+Configuration File Error??B³¹d pliku konfiguracyjnego
+about author??Konrad Siek
+about date??(data wydania 25.09.2006)
+about description??pomocnik w nauce jêzyka
+about title??Tester Program v2.13 pl
+about??O Programie
+add option title??Dodaj Opcjê
+add??Dodaj
+address??Adres
+answers??Odpowiedzi
+are you sure you want to remove??Czy na pewno chcesz usun¹æ<QUESTION>
+are you sure you want to stop??Czy na pewno chcesz zaprzestaæ pracy<QUESTION>
+cancel button text??Anuluj
+cancel??Anuluj
+cannot make dir??Nie mo¿na utworzyæ katalogu.
+captions and messages tooltip??Panel zawierajacy informacje o napisach u¿ytych w programie.
+captions and messages??Etykiety i treœci wiadomoœci
+close??Zamknij
+configuration title??Tester v2.13 pl Ustawienia
+configuration??Ustawienia
+confirm??Potwierdzenie
+default??domyœlny
+description??Opis
+details view button tooltip text??Szczegó³y
+do you want to remove??Czy na pewno chcesz usun¹c element<QUESTION>
+do you want to replace it??Czy chcesz go zast¹piæ<QUESTION>
+doing repetition??Przerabiamy Materia³ Powtórkowy.
+download??Pobierz
+dynamic tree title??Tester v2.13 pl Zarz¹dzanie plikami
+edit question??Edytuj pytanie
+end_test??To jest koniec testu.
+erase repetition??Wymarz powtórki
+error message files??Pliki Komunikatów B³êdów
+error messages tooltip??Panel komunikatów b³êdów
+error messages??Kominikaty B³êdów
+file name label text??Nazwa Pliku:
+file paths tooltip??Œciezki do plików konfiguracyjnych i wejœciowych niezbêdnych do uruchomienia programu.
+file paths??Œcie¿ki plików
+file??Plik
+files of type label text??Pliki typu:
+forced repetition??Natychmiastowa Powtórka
+form title??Tester v2.13 pl
+general options tooltip??Panel ogólnych opcji wp³ywaj¹cych na dzia³anie programu.
+general options??Ustawienia Ogólne
+good work title??Dobrze
+good work??Dobra robota!
+handbook??Podrêcznik U¿ytkownika
+help button text??Pomoc
+help me??Pomó¿ mi
+help??Pomoc
+hint??Wskazówka
+home folder tooltip text??Katalog Domowy
+ignore case??Ignoruj Wielkoœæ Liter
+information??Informacja
+internet??Internet
+invalid root dir??Katalog Ÿród³owy jest niew³aœciwy.
+key??Klucz
+language version title??Tester v2.13 pl Wersja Jêzykowa
+language version??Wersja Jêzykowa
+list view button tooltip text??Lista
+manage??Zarz¹dzaj plikami
+message and caption files??Pliki wiadomoœci i etykiet
+mkdir??Utwórz katalog
+new folder tooltip text??Nowy Katalog
+ok??OK
+open button text??Otwórz
+open??Otwórz
+out of repetition??There is no more repetition.
+poor work title??Wiêc...
+poor work??Prawie dobrze! Spróbuj jeszcze raz.
+possible options??Mo¿liwe opcje
+preferences??Preferencje
+progressing to input??Przerabiamy Nowy Materia³.
+question??Pytanie
+quick view??Szybki Podgl¹d
+quit??WyjdŸ
+regular expressions tooltip??Specyfikacja formatu plików wejœciowych.
+regular expressions??Wyra¿enia regularne
+reload??Prze³aduj
+remove??Usuñ
+repetition??Powtórka
+reverse??Odwróæ
+rules tooltip??Lista równowa¿nych fraz.
+rules??Zasady
+save button text??Zapisz
+save changes??Czy chcesz zapisac zmiany w pliku testowym<QUESTION>
+save??Zapisz
+score??Wynik:
+set address for download??Ustal adres do pobrania informacji:
+set??Ustaw
+shuffle??Tasuj
+start test??Rozpocznij
+state??Stan
+statistics??Statystyki
+stop??Zakoñcz
+test??Test
+training mode??Tryb Treningowy
+up folder tooltip text??Jeden Poziom w Górê
+update button text??Odœwie¿
+use rules??U¿ywaj Zasad
+where would you like to save??Gdzie chcesz zapisaæ swój postêp<QUESTION>
+would you like to save??Czy chcesz zapisaæ pozosta³¹ do zrobienia czêœæ materia³u<QUESTION>

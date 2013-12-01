@@ -1,0 +1,31 @@
+Configuration File Error??Configuration File Error
+Error copying file??Error Copying File!
+Error writing file??Error Writing File!
+cannot make dir??Cannot Create Directory
+concerning errors??Concerning Error Messages
+concerning file paths??Concerning File Paths
+concerning input??Test Material
+concerning messages??Components and Message Captions
+concerning options??Program Options
+concerning regex??Internal Regular Expressions/Internal Input and Output Format
+concerning rules??Data Input Substitution List
+concerning??Concerning
+deleting not successful??Deleting Not Successful!
+do you want to replace it??Do you want to replace it<QUESTION>
+error reading file??Error reading file:
+error??Error
+file already exists??Such a file is already present:
+input not set successfully??Option Not Updated!
+invalid root dir??Root directory is invalid
+loading default settings??Default Settings are Loaded
+malformed url??Malformed URL:
+no connection to url??No connection to URL:
+no key??Cannot generate option without a key.
+no state??Cannot generate option without a state.
+no valid answers??All answers are invalid. Cannot generate an item without answers.
+no_question??Cannot generate an item without question or file path.
+not possible option choice??No such option can be set.
+operation unsuccessfull??Operation was Unsuccessful
+possible entries??Here is a list of possible entries:
+unknown??unknown
+warning??Warning
